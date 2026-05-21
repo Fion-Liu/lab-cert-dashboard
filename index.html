@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab Certification Fee Comparison Dashboard</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; color: #333; }
+header { background: #1a2b4a; color: white; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; }
+header h1 { font-size: 1.3rem; font-weight: 600; }
+#meta-info { font-size: 0.75rem; opacity: 0.65; text-align: right; }
+.container { max-width: 1500px; margin: 0 auto; padding: 20px 24px; }
+.tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab { padding: 9px 20px; border-radius: 6px; border: 2px solid #1a2b4a; background: white;
+       color: #1a2b4a; cursor: pointer; font-weight: 600; font-size: 0.88rem; transition: all 0.2s; }
+.tab.active { background: #1a2b4a; color: white; }
+.tab:hover:not(.active) { background: #e8edf5; }
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* Filter bar */
+.filter-bar { background: white; border-radius: 10px; padding: 14px 20px; margin-bottom: 16px;
+              box-shadow: 0 1px 4px rgba(0,0,0,0.08); display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-end; }
+.fg { display: flex; flex-direction: column; gap: 5px; min-width: 160px; }
+.fg label { font-size: 0.75rem; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 0.4px; }
+.fg select { padding: 7px 10px; border: 1.5px solid #ddd; border-radius: 6px; font-size: 0.88rem; background: white; cursor: pointer; }
+.fg select:focus { outline: none; border-color: #1a2b4a; }
+.btn { padding: 8px 18px; background: #1a2b4a; color: white; border: none; border-radius: 6px;
+       cursor: pointer; font-weight: 600; font-size: 0.88rem; }
+.btn:hover { background: #2a3f6a; }
+.btn-reset { background: #888; }
+.btn-reset:hover { background: #555; }
+
+/* Summary cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+.card { background: white; border-radius: 10px; padding: 14px 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.card .lbl { font-size: 0.72rem; color: #999; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
+.card .val { font-size: 1.5rem; font-weight: 700; color: #1a2b4a; }
+.card .sub { font-size: 0.75rem; color: #bbb; margin-top: 3px; }
+.card.best { border-left: 4px solid #27ae60; }
+.card.worst { border-left: 4px solid #e74c3c; }
+.card.info  { border-left: 4px solid #3498db; }
+
+/* Chart */
+.chart-wrap { background: white; border-radius: 10px; padding: 18px 22px; margin-bottom: 16px;
+              box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+.chart-title { font-size: 0.9rem; font-weight: 700; color: #1a2b4a; margin-bottom: 12px; }
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.bar-lbl { width: 90px; font-size: 0.8rem; font-weight: 600; color: #555; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-track { flex: 1; background: #f0f2f5; border-radius: 4px; height: 26px; }
+.bar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; padding-left: 8px;
+            font-size: 0.78rem; font-weight: 700; color: white; transition: width 0.4s; min-width: 4px; }
+.bar-fill.c-best  { background: #27ae60; }
+.bar-fill.c-mid   { background: #3498db; }
+.bar-fill.c-worst { background: #e74c3c; }
+.bar-price { font-size: 0.8rem; font-weight: 600; color: #333; margin-left: 6px; white-space: nowrap; }
+
+/* Table */
+.tbl-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; background: white; border-radius: 10px;
+        overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); font-size: 0.84rem; }
+thead tr { background: #1a2b4a; color: white; }
+th { padding: 10px 14px; text-align: left; font-size: 0.8rem; font-weight: 600; white-space: nowrap; }
+td { padding: 9px 14px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #f7f9fc; }
+
+/* Badges */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 700; white-space: nowrap; }
+.bg-green  { background: #d4edda; color: #155724; }
+.bg-red    { background: #f8d7da; color: #721c24; }
+.bg-blue   { background: #d1ecf1; color: #0c5460; }
+.bg-yellow { background: #fff3cd; color: #856404; }
+.bg-gray   { background: #e2e3e5; color: #383d41; }
+.bg-purple { background: #e8d5f5; color: #5a1a8a; }
+
+/* Price colors */
+.p-best  { color: #27ae60; font-weight: 700; }
+.p-worst { color: #e74c3c; font-weight: 600; }
+.p-na    { color: #ccc; }
+
+.note-box { font-size: 0.75rem; color: #888; margin-top: 10px; padding: 8px 12px;
+            background: #fffbe6; border-left: 3px solid #f0ad4e; border-radius: 4px; }
+.sec-title { font-size: 0.95rem; font-weight: 700; color: #1a2b4a; margin: 14px 0 8px; }
+.sub-tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+.sub-tab { padding: 6px 14px; border-radius: 20px; border: 1.5px solid #aaa; background: white;
+           color: #555; cursor: pointer; font-size: 0.82rem; font-weight: 600; transition: all 0.2s; }
+.sub-tab.active { background: #2c5282; border-color: #2c5282; color: white; }
+.sub-tab:hover:not(.active) { background: #eef2ff; }
+.empty { text-align: center; padding: 40px; color: #bbb; }
+.lab-select-box { background:#1a2b4a; border-radius:10px; padding:16px 20px; margin-top:16px; }
+.lab-select-box .lsb-title { color:#7fc; font-size:0.85rem; font-weight:700; margin-bottom:10px; }
+.lab-select-box .lsb-options { display:flex; flex-wrap:wrap; gap:8px; }
+.lab-select-box label { display:flex; align-items:center; gap:6px; font-size:0.85rem; cursor:pointer;
+  background:#243d5c; color:white; padding:6px 14px; border-radius:6px; border:2px solid #2a4a7f; }
+.lab-select-box label:has(input:checked) { background:#27ae60; border-color:#27ae60; }
+.lab-select-box label input { cursor:pointer; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🔬 Lab Certification Fee Comparison Dashboard</h1>
+    <div style="font-size:0.78rem;opacity:0.65;margin-top:3px">BQB Bluetooth · Safety CB (Wendell / TUV SUD) · GMA WiFi/BLE 23 Countries</div>
+  </div>
+  <div id="meta-info">Loading...</div>
+</header>
+
+<div class="container">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('bqb')">📡 BQB Bluetooth</button>
+    <button class="tab" onclick="switchTab('safety_wendell')">🛡️ Safety/Energy</button>
+    <button class="tab" onclick="switchTab('safety_sud')">📡 EMC/RF</button>
+    <button class="tab" onclick="switchTab('gma')">🌍 GMA with WiFi BLE</button>
+    <button class="tab" onclick="switchTab('summary')">💰 Cost Summary</button>
+  </div>
+
+  <!-- BQB -->
+  <div id="panel-bqb" class="panel active">
+    <div class="filter-bar" style="align-items:flex-start">
+      <div class="fg" style="min-width:320px">
+        <label>Item Type <span style="font-weight:400;color:#aaa;font-size:0.7rem">(複選)</span></label>
+        <div id="bqb-checkboxes" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px">
+          <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;font-weight:400;cursor:pointer;background:#f0f4ff;padding:5px 10px;border-radius:6px;border:1.5px solid #c5d3f0">
+            <input type="checkbox" value="all" id="chk-all" onchange="toggleAllBQB(this)" checked style="cursor:pointer"> All Items
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;font-weight:400;cursor:pointer;background:#f0f4ff;padding:5px 10px;border-radius:6px;border:1.5px solid #c5d3f0">
+            <input type="checkbox" value="rfphy" class="bqb-chk" onchange="renderBQB()" checked style="cursor:pointer"> RF-PHY
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;font-weight:400;cursor:pointer;background:#f0f4ff;padding:5px 10px;border-radius:6px;border:1.5px solid #c5d3f0">
+            <input type="checkbox" value="profile" class="bqb-chk" onchange="renderBQB()" checked style="cursor:pointer"> Profile
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;font-weight:400;cursor:pointer;background:#f0f4ff;padding:5px 10px;border-radius:6px;border:1.5px solid #c5d3f0">
+            <input type="checkbox" value="profile-check" class="bqb-chk" onchange="renderBQB()" checked style="cursor:pointer"> Profile Check
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;font-weight:400;cursor:pointer;background:#f0f4ff;padding:5px 10px;border-radius:6px;border:1.5px solid #c5d3f0">
+            <input type="checkbox" value="bqc-new" class="bqb-chk" onchange="renderBQB()" checked style="cursor:pointer"> BQC Review (New)
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;font-weight:400;cursor:pointer;background:#f0f4ff;padding:5px 10px;border-radius:6px;border:1.5px solid #c5d3f0">
+            <input type="checkbox" value="bqc-listing" class="bqb-chk" onchange="renderBQB()" checked style="cursor:pointer"> BQC Review (Listing)
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;font-weight:400;cursor:pointer;background:#f0f4ff;padding:5px 10px;border-radius:6px;border:1.5px solid #c5d3f0">
+            <input type="checkbox" value="rn-did" class="bqb-chk" onchange="renderBQB()" checked style="cursor:pointer"> RN/DID Membership
+          </label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:0.85rem;font-weight:400;cursor:pointer;background:#f0f4ff;padding:5px 10px;border-radius:6px;border:1.5px solid #c5d3f0">
+            <input type="checkbox" value="handling-fee" class="bqb-chk" onchange="renderBQB()" checked style="cursor:pointer"> Handling Fee
+          </label>
+        </div>
+      </div>
+    </div>
+    <div id="bqb-cards" class="cards"></div>
+    <div id="bqb-chart" class="chart-wrap" style="display:none">
+      <div class="chart-title">Price Comparison</div>
+      <div id="bqb-bars"></div>
+    </div>
+    <div class="sec-title">Detailed Table</div>
+    <div class="tbl-wrap" id="bqb-table"></div>
+    <div class="note-box">✓ = lowest price for that item. Profile fee: Allion $270/profile; Dekra not quoted; TUV RH included in RF-PHY.</div>
+    <div class="lab-select-box">
+      <div class="lsb-title">🎯 Select Lab for Cost Summary</div>
+      <div class="lsb-options" id="bqb-lab-select">
+        <label><input type="radio" name="bqb-selected-lab" value="Allion" checked> Allion</label>
+        <label><input type="radio" name="bqb-selected-lab" value="Dekra"> Dekra</label>
+        <label><input type="radio" name="bqb-selected-lab" value="TUV RH"> TUV RH</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Safety Wendell -->
+  <div id="panel-safety_wendell" class="panel">
+    <div class="filter-bar" style="align-items:flex-start;flex-wrap:wrap;gap:16px">
+      <div class="fg">
+        <label>Product</label>
+        <select id="sw-product" onchange="initSWFilters();renderSafetyWendell()"></select>
+      </div>
+      <div class="fg" style="min-width:260px">
+        <label>Region <span style="font-weight:400;color:#aaa;font-size:0.7rem">(複選)</span></label>
+        <div id="sw-region-checks" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+      </div>
+      <div class="fg" style="min-width:320px">
+        <label>Standard <span style="font-weight:400;color:#aaa;font-size:0.7rem">(複選)</span></label>
+        <div id="sw-standard-checks" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;max-height:120px;overflow-y:auto"></div>
+      </div>
+    </div>
+    <div id="sw-cards" class="cards"></div>
+    <div id="sw-chart" class="chart-wrap" style="display:none">
+      <div class="chart-title">UL vs TUV/SUD Total Cost by Source</div>
+      <div id="sw-bars"></div>
+    </div>
+    <div class="sec-title">Detailed Table</div>
+    <div class="tbl-wrap" id="sw-table"></div>
+    <div class="note-box">✓ = lowest price. UL Charge = lab fee for issuing Cert/Report. WD = Witness/Document test fee.</div>
+    <div class="lab-select-box">
+      <div class="lsb-title">🎯 Select Lab & Cert Type for Cost Summary</div>
+      <div class="lsb-options" id="sw-lab-select">
+        <label><input type="radio" name="sw-selected-lab" value="Wendell-UL" checked> Wendell (UL)</label>
+        <label><input type="radio" name="sw-selected-lab" value="Wendell-TUV"> Wendell (TUV)</label>
+        <label><input type="radio" name="sw-selected-lab" value="Perfectlink-UL"> Perfectlink (UL)</label>
+        <label><input type="radio" name="sw-selected-lab" value="Perfectlink-TUV"> Perfectlink (TUV)</label>
+        <label><input type="radio" name="sw-selected-lab" value="USS-UL"> USS (UL)</label>
+        <label><input type="radio" name="sw-selected-lab" value="USS-TUV"> USS (TUV)</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Safety SUD / EMC RF -->
+  <div id="panel-safety_sud" class="panel">
+    <div class="filter-bar" style="align-items:flex-start;flex-wrap:wrap;gap:16px">
+      <div class="fg" style="min-width:400px">
+        <label>Country / Region <span style="font-weight:400;color:#aaa;font-size:0.7rem">(複選)</span></label>
+        <div id="sud-country" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;max-height:100px;overflow-y:auto"></div>
+      </div>
+      <div class="fg" style="min-width:260px">
+        <label>Scope <span style="font-weight:400;color:#aaa;font-size:0.7rem">(複選)</span></label>
+        <div id="sud-scope" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+      </div>
+      <button class="btn btn-reset" onclick="resetSUD()" style="align-self:flex-end">Reset</button>
+    </div>
+    <div id="sud-cards" class="cards"></div>
+    <div class="sec-title">TUV Rh vs TUV SUD — Camera Doorbell Pricing</div>
+    <div class="tbl-wrap" id="sud-table"></div>
+    <div class="note-box">Comparing EMC+RF Ring price list: TUV Rh vs TUV SUD. Price = quoted fee (USD). "Support: Yes" items only shown.</div>
+    <div class="lab-select-box">
+      <div class="lsb-title">🎯 Select Lab for Cost Summary</div>
+      <div class="lsb-options" id="sud-lab-select">
+        <label><input type="radio" name="sud-selected-lab" value="TUV Rh" checked> TUV Rh</label>
+        <label><input type="radio" name="sud-selected-lab" value="TUV SUD"> TUV SUD</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- GMA -->
+  <div id="panel-gma" class="panel">
+    <div class="filter-bar" style="align-items:flex-start;flex-wrap:wrap;gap:16px">
+      <div class="fg" style="min-width:320px">
+        <label>Country <span style="font-weight:400;color:#aaa;font-size:0.7rem">(複選)</span></label>
+        <div id="gma-country" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px;max-height:90px;overflow-y:auto"></div>
+      </div>
+      <div class="fg" style="min-width:200px">
+        <label>Mandatory Status <span style="font-weight:400;color:#aaa;font-size:0.7rem">(複選)</span></label>
+        <div id="gma-mandatory" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px"></div>
+      </div>
+      <div class="fg" style="min-width:200px">
+        <label>Lab <span style="font-weight:400;color:#aaa;font-size:0.7rem">(複選)</span></label>
+        <div id="gma-lab" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:4px"></div>
+      </div>
+      <div class="fg" style="min-width:160px">
+        <label>Recommended Lab</label>
+        <select id="gma-rec" onchange="renderGMA()" style="padding:7px 10px;border:1.5px solid #ddd;border-radius:6px;font-size:0.88rem">
+          <option value="all">All</option>
+          <option value="UL">UL</option>
+          <option value="BV">BV</option>
+          <option value="CSA">CSA</option>
+          <option value="Sporton">Sporton</option>
+          <option value="TUV">TUV</option>
+          <option value="KIWA">KIWA</option>
+        </select>
+      </div>
+      <button class="btn btn-reset" onclick="resetGMA()" style="align-self:flex-end">Reset</button>
+    </div>
+    <div id="gma-cards" class="cards"></div>
+    <div id="gma-chart" class="chart-wrap" style="display:none">
+      <div class="chart-title">Lab Total Cost (Selected Countries)</div>
+      <div id="gma-bars"></div>
+    </div>
+    <div class="sec-title">Country × Lab Price Table</div>
+    <div class="tbl-wrap" id="gma-table"></div>
+    <div class="note-box">★ = Recommended lab for that country. ✓ = lowest price in row. Prices in USD.</div>
+    <div class="lab-select-box">
+      <div class="lsb-title">🎯 Select Lab for Cost Summary</div>
+      <div class="lsb-options" id="gma-lab-select">
+        <label><input type="radio" name="gma-selected-lab" value="ul" checked> UL</label>
+        <label><input type="radio" name="gma-selected-lab" value="bv"> BV</label>
+        <label><input type="radio" name="gma-selected-lab" value="csa"> CSA</label>
+        <label><input type="radio" name="gma-selected-lab" value="sporton"> Sporton</label>
+        <label><input type="radio" name="gma-selected-lab" value="tuv"> TUV</label>
+        <label><input type="radio" name="gma-selected-lab" value="kiwa"> KIWA</label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cost Summary -->
+  <div id="panel-summary" class="panel">
+    <div class="filter-bar">
+      <div style="font-size:0.9rem;color:#555">
+        此頁面彙整所有分頁中已選定的費用，提供完整費用總表。請先在各分頁選定條件後回到此頁查看。
+      </div>
+      <button class="btn" onclick="renderSummary()">🔄 Refresh Summary</button>
+    </div>
+    <div id="summary-cards" class="cards"></div>
+    <div class="sec-title">費用總表 (Cost Summary)</div>
+    <div class="tbl-wrap" id="summary-table"></div>
+  </div>
+</div>
+
+<script>
+// ── Global data ──────────────────────────────────────────────
+let DATA = null;
+const GMA_LABS = ['ul','bv','csa','sporton','tuv','kiwa'];
+const GMA_LABELS = {ul:'UL',bv:'BV',csa:'CSA',sporton:'Sporton',tuv:'TUV',kiwa:'KIWA'};
+const LAB_COLORS = {ul:'#3498db',bv:'#9b59b6',csa:'#e67e22',sporton:'#1abc9c',tuv:'#e74c3c',kiwa:'#27ae60'};
+
+// ── Load data.json ────────────────────────────────────────────
+function loadData() {
+  DATA = {"bqb": [{"item": "BQC Review Fee (New Application)", "key": "bqc-new", "lab": "Allion", "price": 6600, "leadtime": "8 working days", "samples": "1 DUT", "note": ""}, {"item": "Profile (per profile)", "key": "profile", "lab": "Allion", "price": 270, "leadtime": "1 working days/ per profile.", "samples": "1 DUT", "note": ""}, {"item": "Profile Check (per DUT)", "key": "profile-check", "lab": "Allion", "price": 150, "leadtime": "1 working day", "samples": "1 DUT", "note": ""}, {"item": "BQC review fee", "key": "other", "lab": "Allion", "price": 720, "leadtime": "", "samples": "", "note": ""}, {"item": "BQC Review Fee (Listing)", "key": "bqc-listing", "lab": "Allion", "price": 500, "leadtime": "", "samples": "", "note": ""}, {"item": "RN/DID Associate Membership", "key": "rn-did", "lab": "Allion", "price": 6000, "leadtime": "", "samples": "", "note": ""}, {"item": "Handling Fee", "key": "handling-fee", "lab": "Allion", "price": 600, "leadtime": "", "samples": "", "note": ""}, {"item": "BQC Review Fee (New Application)", "key": "bqc-new", "lab": "Dekra", "price": 6000, "leadtime": "2 Weeks", "samples": "2* conducted sample", "note": ""}, {"item": "Profile (per profile)", "key": "profile", "lab": "Dekra", "price": null, "leadtime": "", "samples": "", "note": ""}, {"item": "Profile Check (per DUT)", "key": "profile-check", "lab": "Dekra", "price": 1000, "leadtime": "2weeks", "samples": "1* conducted / 1* normal", "note": ""}, {"item": "BQC review fee", "key": "other", "lab": "Dekra", "price": 2000, "leadtime": "", "samples": "", "note": ""}, {"item": "BQC Review Fee (Listing)", "key": "bqc-listing", "lab": "Dekra", "price": 1200, "leadtime": "", "samples": "", "note": ""}, {"item": "RN/DID Associate Membership", "key": "rn-did", "lab": "Dekra", "price": 6000, "leadtime": "", "samples": "", "note": ""}, {"item": "BQC Review Fee (New Application)", "key": "bqc-new", "lab": "TUV RH", "price": 5000, "leadtime": "2~3 working weeks", "samples": "1* conducted + 1*normal", "note": ""}, {"item": "Profile (per profile)", "key": "profile", "lab": "TUV RH", "price": null, "leadtime": "", "samples": "", "note": ""}, {"item": "Profile Check (per DUT)", "key": "profile-check", "lab": "TUV RH", "price": 500, "leadtime": "7 working days", "samples": "1*normal", "note": ""}, {"item": "BQC review fee", "key": "other", "lab": "TUV RH", "price": 1000, "leadtime": "3 working days", "samples": "", "note": ""}, {"item": "BQC Review Fee (Listing)", "key": "bqc-listing", "lab": "TUV RH", "price": 1000, "leadtime": "", "samples": "", "note": ""}, {"item": "RN/DID Associate Membership", "key": "rn-did", "lab": "TUV RH", "price": 6000, "leadtime": "", "samples": "", "note": ""}, {"item": "Handling Fee", "key": "handling-fee", "lab": "TUV RH", "price": 1200, "leadtime": "", "samples": "", "note": ""}], "safety_wendell": {"Camera Doorbell": [{"region": "CB", "compliance": "CB ( without light )", "item": "IEC 62368-1 2nd Edition (EVT+DVT)", "source_lab": "USS", "ul_lab": 14150, "ul_wd": 4700, "ul_lt": "6~8", "tuv_lab": 9300, "tuv_wd": 4700, "tuv_lt": "6~8", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "uss"}, {"region": "CB", "compliance": "CB ( without light )", "item": "IEC 62368-1 3rd Edition (EVT+DVT)", "source_lab": "USS", "ul_lab": 14150, "ul_wd": 4700, "ul_lt": "6~8", "tuv_lab": 9300, "tuv_wd": 4700, "tuv_lt": "6~8", "pl_lab": 0, "pl_lt": "", "note": "[incl. Annex Y Gasket+Corrosion]", "product": "Camera Doorbell", "fmt": "uss"}, {"region": "CB", "compliance": "CB ( without light )", "item": "IEC 60950-22", "source_lab": "USS", "ul_lab": 3600, "ul_wd": 350, "ul_lt": "3", "tuv_lab": 350, "tuv_wd": 350, "tuv_lt": "3", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "uss"}, {"region": "CB", "compliance": "CB ( without light )", "item": "IEC 62368-3", "source_lab": "USS", "ul_lab": 350, "ul_wd": 350, "ul_lt": "2", "tuv_lab": 350, "tuv_wd": 350, "tuv_lt": "2", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "uss"}, {"region": "CB", "compliance": "CB ( without light )", "item": "IEC 60825-1", "source_lab": "USS", "ul_lab": 3600, "ul_wd": 350, "ul_lt": "4", "tuv_lab": 3600, "tuv_wd": 350, "tuv_lt": "4", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "uss"}, {"region": "CB", "compliance": "CB ( without light )", "item": "IEC 62471", "source_lab": "USS", "ul_lab": 1500, "ul_wd": 350, "ul_lt": "2~4", "tuv_lab": 1500, "tuv_wd": 350, "tuv_lt": "2~4", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "uss"}, {"region": "CB", "compliance": "CB ( without light )", "item": "IEC 60529 (EVT+DVT)", "source_lab": "USS", "ul_lab": 1500, "ul_wd": 1500, "ul_lt": "2", "tuv_lab": 1500, "tuv_wd": 1500, "tuv_lt": "2", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "uss"}, {"region": "CB", "compliance": "CB ( without light )", "item": "IEC 62133 (certify bettery test Annex M) / per one", "source_lab": "USS", "ul_lab": 2000, "ul_wd": 1000, "ul_lt": "2~3", "tuv_lab": 800, "tuv_wd": 1000, "tuv_lt": "2~3", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "uss"}, {"region": "US / CA", "compliance": "Safety/NRTL", "item": "UL/cUL 62368-1 3rd Edition (after CB)", "source_lab": "USS", "ul_lab": 5000, "ul_wd": 350, "ul_lt": "2", "tuv_lab": 1650, "tuv_wd": 350, "tuv_lt": "2", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "uss"}, {"region": "US / CA", "compliance": "Energy CEC/DoE", "item": "DOE: 10 CFR 430.32(z)", "source_lab": "USS", "ul_lab": 900, "ul_wd": 2500, "ul_lt": "4", "tuv_lab": 900, "tuv_wd": 2500, "tuv_lt": "4", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "uss"}, {"region": "US / CA", "compliance": "Energy", "item": "Retest fee", "source_lab": "USS", "ul_lab": 750, "ul_wd": 750, "ul_lt": "", "tuv_lab": 750, "tuv_wd": 750, "tuv_lt": "", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "uss"}, {"region": "EU", "compliance": "Energy Efficiency", "item": "(EU) 2023/826 (EVT+DVT)", "source_lab": "USS", "ul_lab": 1400, "ul_wd": 1400, "ul_lt": "2", "tuv_lab": 1400, "tuv_wd": 1400, "tuv_lt": "2", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "uss"}, {"region": "CB", "compliance": "engineer change", "item": "CB Additional second one Cer+rep at the same time", "source_lab": "USS", "ul_lab": 1000, "ul_wd": 500, "ul_lt": "", "tuv_lab": 1500, "tuv_wd": 350, "tuv_lt": "", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "uss"}, {"region": "CB", "compliance": "CB", "item": "IEC 62368-1 2nd Edition (EVT+DVT)", "source_lab": "Wendell", "ul_lab": 7500, "ul_wd": 3000, "ul_lt": "6~8w", "tuv_lab": 3500, "tuv_wd": 3000, "tuv_lt": "6~8w", "pl_lab": 0, "pl_lt": "", "note": "若2+3，第二張CB費用：USD 1000+ 500", "product": "Camera Doorbell", "fmt": "wendell"}, {"region": "CB", "compliance": "CB", "item": "IEC 62368-1 3rd Edition (EVT+DVT)", "source_lab": "Wendell", "ul_lab": 13550, "ul_wd": 4350, "ul_lt": "6~8w", "tuv_lab": 12200, "tuv_wd": 4350, "tuv_lt": "6~8w", "pl_lab": 0, "pl_lt": "", "note": "若2+3，第二張CB費用：USD 1000+ 500 [incl. Annex Y Gasket+Corrosion]", "product": "Camera Doorbell", "fmt": "wendell"}, {"region": "CB", "compliance": "CB", "item": "IEC 60950-22", "source_lab": "Wendell", "ul_lab": 3600, "ul_wd": 1000, "ul_lt": "6~8w", "tuv_lab": 1000, "tuv_wd": 1000, "tuv_lt": "6~8w", "pl_lab": 0, "pl_lt": "", "note": "TUV雖然此項沒有規費，但Gasket一款費用3500", "product": "Camera Doorbell", "fmt": "wendell"}, {"region": "CB", "compliance": "CB", "item": "IEC 62368-3", "source_lab": "Wendell", "ul_lab": 500, "ul_wd": 500, "ul_lt": "2w", "tuv_lab": 500, "tuv_wd": 500, "tuv_lt": "2w", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "wendell"}, {"region": "CB", "compliance": "CB", "item": "IEC 62471", "source_lab": "Wendell", "ul_lab": 1500, "ul_wd": 350, "ul_lt": "2w", "tuv_lab": 1500, "tuv_wd": 350, "tuv_lt": "2w", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "wendell"}, {"region": "CB", "compliance": "CB", "item": "IEC 60825-1", "source_lab": "Wendell", "ul_lab": 3600, "ul_wd": 350, "ul_lt": "2w", "tuv_lab": 3600, "tuv_wd": 350, "tuv_lt": "2w", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "wendell"}, {"region": "CB", "compliance": "CB", "item": "IEC 60529 (EVT+DVT)", "source_lab": "Wendell", "ul_lab": 1500, "ul_wd": 1500, "ul_lt": "2w", "tuv_lab": 1500, "tuv_wd": 1500, "tuv_lt": "2w", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "wendell"}, {"region": "CB", "compliance": "CB", "item": "AnneX M", "source_lab": "Wendell", "ul_lab": 2000, "ul_wd": 1000, "ul_lt": "2w", "tuv_lab": 800, "tuv_wd": 1000, "tuv_lt": "2w", "pl_lab": 0, "pl_lt": "", "note": "後面Per source + 800 (UL & TUV)", "product": "Camera Doorbell", "fmt": "wendell"}, {"region": "US / CA", "compliance": "Safety/NRTL", "item": "UL/cUL 62368-1 3rd Edition (after CB)", "source_lab": "Wendell", "ul_lab": 5000, "ul_wd": 500, "ul_lt": "8w", "tuv_lab": 1650, "tuv_wd": 500, "tuv_lt": "8w", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "wendell"}, {"region": "US / CA", "compliance": "Energy BCS", "item": "DOE: 10 CFR 430.32(z)", "source_lab": "Wendell", "ul_lab": 1000, "ul_wd": 3000, "ul_lt": "4~5w", "tuv_lab": 1000, "tuv_wd": 3000, "tuv_lt": "4~5W", "pl_lab": 0, "pl_lt": "", "note": "TUV/SUD的NRcan需年費廠驗費\n以下廠驗費by次數不含首次廠驗\nAnnual fee:300/per year\nFactory inspection\nChina \n1850/per time/per factory\nTaiwan\n900~1250/per time/per factory", "product": "Camera Doorbell", "fmt": "wendell"}, {"region": "US / CA", "compliance": "Energy BCS", "item": "Retest fee", "source_lab": "Wendell", "ul_lab": 1500, "ul_wd": 1500, "ul_lt": "", "tuv_lab": 1500, "tuv_wd": 1500, "tuv_lt": "", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "wendell"}, {"region": "EU", "compliance": "Energy Efficiency", "item": "(EU) 2023/826 (EVT+DVT)", "source_lab": "Wendell", "ul_lab": 1500, "ul_wd": 1500, "ul_lt": "2~3w", "tuv_lab": 1500, "tuv_wd": 1500, "tuv_lt": "2~3w", "pl_lab": 0, "pl_lt": "", "note": "", "product": "Camera Doorbell", "fmt": "wendell"}, {"region": "CB", "compliance": "Engineering Change", "item": "Engineering change", "source_lab": "Wendell", "ul_lab": 13000, "ul_wd": 4000, "ul_lt": "", "tuv_lab": 13000, "tuv_wd": 4000, "tuv_lt": "", "pl_lab": 0, "pl_lt": "", "note": "此為預留工程變更或重測費用，Ring可隨意調整", "product": "Camera Doorbell", "fmt": "wendell"}, {"region": "CB", "compliance": "CB", "item": "IEC 62368-1 2nd Edition (EVT+DVT)", "source_lab": "Perfectlink", "ul_lab": 17550, "ul_wd": 0, "ul_lt": "6 weeks", "tuv_lab": 12150, "tuv_wd": 0, "tuv_lt": "6 weeks", "pl_lab": 0, "pl_lt": "", "note": "單一結構，單一零件供應商", "product": "Camera Doorbell", "fmt": "perfectlink"}, {"region": "CB", "compliance": "CB", "item": "IEC 62368-1 3rd Edition (EVT+DVT)", "source_lab": "Perfectlink", "ul_lab": 20550, "ul_wd": 0, "ul_lt": "6 weeks", "tuv_lab": 15150, "tuv_wd": 0, "tuv_lt": "6 weeks", "pl_lab": 0, "pl_lt": "", "note": "單一結構，單一零件供應商 [incl. Annex Y Gasket+Corrosion]", "product": "Camera Doorbell", "fmt": "perfectlink"}, {"region": "CB", "compliance": "CB", "item": "IEC 60950-22", "source_lab": "Perfectlink", "ul_lab": 5000, "ul_wd": 0, "ul_lt": "4 weeks", "tuv_lab": 3000, "tuv_wd": 0, "tuv_lt": "4 weeks", "pl_lab": 0, "pl_lt": "", "note": "單一結構，單一零件供應商", "product": "Camera Doorbell", "fmt": "perfectlink"}, {"region": "CB", "compliance": "CB", "item": "IEC 62368-3", "source_lab": "Perfectlink", "ul_lab": 3000, "ul_wd": 0, "ul_lt": "2 weeks", "tuv_lab": 1250, "tuv_wd": 0, "tuv_lt": "2 weeks", "pl_lab": 0, "pl_lt": "", "note": "單一結構，單一零件供應商", "product": "Camera Doorbell", "fmt": "perfectlink"}, {"region": "CB", "compliance": "CB", "item": "IEC 62471", "source_lab": "Perfectlink", "ul_lab": 2500, "ul_wd": 0, "ul_lt": "3 weeks", "tuv_lab": 2500, "tuv_wd": 0, "tuv_lt": "3 weeks", "pl_lab": 0, "pl_lt": "", "note": "單一 IR LED 供應商", "product": "Camera Doorbell", "fmt": "perfectlink"}, {"region": "CB", "compliance": "CB", "item": "IEC 60529 (EVT+DVT)", "source_lab": "Perfectlink", "ul_lab": 4050, "ul_wd": 0, "ul_lt": "3 weeks", "tuv_lab": 4000, "tuv_wd": 0, "tuv_lt": "3 weeks", "pl_lab": 0, "pl_lt": "", "note": "單一防水塵 solution", "product": "Camera Doorbell", "fmt": "perfectlink"}, {"region": "CB", "compliance": "CB", "item": "Engineering verification", "source_lab": "Perfectlink", "ul_lab": 13000, "ul_wd": 0, "ul_lt": "", "tuv_lab": 0, "tuv_wd": 0, "tuv_lt": "", "pl_lab": 0, "pl_lt": "", "note": "30% of total price amount 作為重測budget", "product": "Camera Doorbell", "fmt": "perfectlink"}, {"region": "US / CA", "compliance": "Safety/NRTL", "item": "UL/cUL 62368-1 3rd Edition (after CB)", "source_lab": "Perfectlink", "ul_lab": 17550, "ul_wd": 0, "ul_lt": "2 weeks                  (After CB)", "tuv_lab": 0, "tuv_wd": 0, "tuv_lt": "", "pl_lab": 0, "pl_lt": "", "note": "單一結構，單一零件供應商", "product": "Camera Doorbell", "fmt": "perfectlink"}, {"region": "US / CA", "compliance": "Energy BCS", "item": "DOE: 10 CFR 430.32(z)", "source_lab": "Perfectlink", "ul_lab": 4000, "ul_wd": 0, "ul_lt": "6 weeks", "tuv_lab": 0, "tuv_wd": 0, "tuv_lt": "", "pl_lab": 4000, "pl_lt": "4 weeks", "note": "單一結構，單一電池容量", "product": "Camera Doorbell", "fmt": "perfectlink"}, {"region": "EU", "compliance": "Energy Efficiency", "item": "(EU) 2023/826 (EVT+DVT)", "source_lab": "Perfectlink", "ul_lab": 1500, "ul_wd": 0, "ul_lt": "", "tuv_lab": 0, "tuv_wd": 0, "tuv_lt": "", "pl_lab": 0, "pl_lt": "3 weeks", "note": "單一結構，單一零件供應商", "product": "Camera Doorbell", "fmt": "perfectlink"}]}, "safety_sud": {"Camera Doorbell": [{"country": "", "scope": "", "cert_name": "", "standard": "Initial charge", "price_unit": null, "support": "", "price": null, "subtotal": null, "country_total": null, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "IEC/EN 62368-1 2nd & 3rd (2CB report +Cert.); Include IR LED 62471 test_indoor, non-UL\n&\nIEC/EN 62368-1 3rd & 4th (2CB report +Cert.); Include IR LED 62471 test_indoor, non-UL", "price_unit": 8500, "support": "Yes", "price": 8500, "subtotal": 10050, "country_total": 58850, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "", "price_unit": null, "support": "", "price": null, "subtotal": null, "country_total": 58850, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "IEC/EN 62368-1 2nd & 3rd\nUL 62368-1 3rd (2CBs+1UL)\nInclude IR LED 62471 test_indoor, UL(cTUVus)\n&\nIEC/EN 62368-1 3rd & 4th\nUL 62368-1 4th (2CBs+1UL)\nInclude IR LED 62471 test_indoor, UL(cTUVus)", "price_unit": 10200, "support": "Yes", "price": 10200, "subtotal": 11750, "country_total": 58850, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "", "price_unit": null, "support": "", "price": null, "subtotal": null, "country_total": 58850, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "IEC/EN 62368-1 2nd & 3rd (2CB report +Cert.); Include the test_outdoor, non-UL\n&\nIEC/EN 62368-1 3rd & 4th (2CB report +Cert.); Include the test_outdoor, non-UL", "price_unit": 11000, "support": "Yes", "price": 11000, "subtotal": 12550, "country_total": 58850, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "", "price_unit": null, "support": "", "price": null, "subtotal": null, "country_total": 58850, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "IEC/EN 62368-1 2nd & 3rd\nUL 62368-1 3rd (2CBs+1UL)\nInclude IR LED 62471 test_outdoor, UL(cTUVus)\n&\nIEC/EN 62368-1 3rd & 4th\nUL 62368-1 4th (2CBs+1UL)\nInclude IR LED 62471 test_outdoor, UL(cTUVus)", "price_unit": 12700, "support": "Yes", "price": 12700, "subtotal": 12700, "country_total": 58850, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "IEC 62368-1:2014 (2nd Edition), based on 62368-1:2018 (3rd Edition)", "price_unit": 2000, "support": "Yes", "price": 2000, "subtotal": 2000, "country_total": 58850, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "IEC 62368-1:2023(based on IEC 62368-1:2014 (2nd Edition) OR 62368-1:2018 (3rd Edition)", "price_unit": 2000, "support": "Yes", "price": 2000, "subtotal": 2000, "country_total": 58850, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "Informative report", "standard": "IEC 62471  (testing only)", "price_unit": 1500, "support": "Yes", "price": 1500, "subtotal": 1500, "country_total": 58850, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "Informative report", "standard": "IEC 60529 (IEC 62368-1:2018  (3rd Edition) Annex Y)", "price_unit": 1500, "support": "Yes", "price": 1500, "subtotal": 1500, "country_total": 58850, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "Informative report", "standard": "IEC 62368-1:2018  (3rd Edition) Annex Y (including IP Test, Gasket Test, Approved Material Used for the others)", "price_unit": 4000, "support": "Yes", "price": 4000, "subtotal": 4800, "country_total": 58850, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "Safety", "cert_name": "NRTL", "standard": "UL 62368-1:2018, based on TUV-Rh CB", "price_unit": 1700, "support": "Yes", "price": 1700, "subtotal": 1700, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "EMC", "cert_name": "FCC", "standard": "FCC 47 CFR part 15 Class B", "price_unit": 1000, "support": "Yes", "price": 1000, "subtotal": 1850, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "EMC", "cert_name": "FCC", "standard": "FCC 47 CFR part 15 Class B", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.247", "price_unit": 3200, "support": "Yes", "price": 3200, "subtotal": 3500, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.247", "price_unit": 1200, "support": "Yes", "price": 1200, "subtotal": 1500, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.407", "price_unit": 4400, "support": "Yes", "price": 4400, "subtotal": 7000, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.407", "price_unit": 4400, "support": "Yes", "price": 4400, "subtotal": 7000, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.407", "price_unit": 2800, "support": "Yes", "price": 2800, "subtotal": 5400, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.407", "price_unit": 18000, "support": "Yes", "price": 18000, "subtotal": 20600, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.407", "price_unit": 4200, "support": "Yes", "price": 4200, "subtotal": 19200, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.247", "price_unit": 1500, "support": "Yes", "price": 1500, "subtotal": 1500, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.247", "price_unit": 1500, "support": "Yes", "price": 1500, "subtotal": 1500, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.247", "price_unit": 1500, "support": "Yes", "price": 1500, "subtotal": 1500, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.249", "price_unit": 4680, "support": "Yes", "price": 4680, "subtotal": 4680, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 2.1091", "price_unit": 150, "support": "Yes", "price": 150, "subtotal": 150, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC Certification", "price_unit": 1000, "support": "Yes", "price": 1000, "subtotal": 1000, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC Certification", "price_unit": 670, "support": "Yes", "price": 670, "subtotal": 670, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC Certification", "price_unit": 670, "support": "Yes", "price": 670, "subtotal": 670, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC Certification", "price_unit": 670, "support": "Yes", "price": 670, "subtotal": 670, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "Energy", "cert_name": "DOE", "standard": "10 C.F.R. Parts 429, 430 \n(Testing and issue of report to: US DOE / US CEC / NRCAN, including certification and registration)", "price_unit": 3600, "support": "Yes", "price": 3600, "subtotal": 4300, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "Energy", "cert_name": "CEC", "standard": "10 C.F.R. Parts 429, 430\n(based on DOE, price included in item F36)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "USA", "scope": "Energy", "cert_name": "CEC", "standard": "10 C.F.R. Parts 429, 430\n(based on DOE, price included in item F36)", "price_unit": null, "support": "Yes", "price": null, "subtotal": 700, "country_total": 85090, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "Safety", "cert_name": "NRTL", "standard": "CAN/CSA-C22.2 No. 62368-1:2018\nUL 62368-1:2018", "price_unit": 1700, "support": "Yes", "price": 1700, "subtotal": 1700, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "EMC", "cert_name": "IC", "standard": "ICES-003\n(leverage from FCC, price included in item E18)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "EMC", "cert_name": "IC", "standard": "ICES-005", "price_unit": 1250, "support": "Yes", "price": 1250, "subtotal": 2100, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-247 (leverage from FCC)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-247 (leverage part of data from FCC)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-247 (leverage part of data from FCC)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-247 (leverage part of data from FCC)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-247 (leverage part of data from FCC)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-247 (leverage part of data from FCC)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-247 (leverage from FCC)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "RF", "cert_name": "FCC", "standard": "RSS-247 (leverage from FCC)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "RF", "cert_name": "FCC", "standard": "RSS-247 (leverage from FCC)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "RF", "cert_name": "FCC", "standard": "RSS-247 (leverage from FCC)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-210 (leverage from FCC)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-102 (leverage from FCC)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "IC Certification", "price_unit": 1560, "support": "Yes", "price": 1560, "subtotal": 1560, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Canada", "scope": "Energy", "cert_name": "NRCAN", "standard": "Listing  (based on DOE, price included in item F36)", "price_unit": null, "support": "Yes", "price": null, "subtotal": 700, "country_total": 6060, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "EMC", "cert_name": "CE", "standard": "EN 55032:2015+A11:2020\nEN 55035:2017+A11:2020 \nEN 55015, EN 61547\nEN 61000-3-2, EN 61000-3-3", "price_unit": 2850, "support": "Yes", "price": 2850, "subtotal": 5050, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "EMC", "cert_name": "CE", "standard": "EN 55015, EN 61547\nEN 61000-3-2, EN 61000-3-3", "price_unit": 2500, "support": "Yes", "price": 2500, "subtotal": 4700, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "EMC", "cert_name": "CE", "standard": "EN 301489-1 / EN 301489-17", "price_unit": 2500, "support": "Yes", "price": 2500, "subtotal": 2500, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 300328", "price_unit": 2600, "support": "Yes", "price": 2600, "subtotal": 2900, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 300328", "price_unit": 1200, "support": "Yes", "price": 1200, "subtotal": 1500, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 301893", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 4700, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 301893", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 4700, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 301893", "price_unit": 850, "support": "Yes", "price": 850, "subtotal": 2550, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 301893", "price_unit": 8000, "support": "Yes", "price": 8000, "subtotal": 9700, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 301893", "price_unit": 3700, "support": "Yes", "price": 3700, "subtotal": 15700, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 300440", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 300440", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 300440", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 300440", "price_unit": 2600, "support": "Yes", "price": 2600, "subtotal": 2600, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 300220", "price_unit": 2500, "support": "Yes", "price": 2500, "subtotal": 2500, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 300440", "price_unit": 6000, "support": "Yes", "price": 6000, "subtotal": 6000, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN302567", "price_unit": 12000, "support": "Yes", "price": 12000, "subtotal": 12000, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "", "price_unit": 150, "support": "Yes", "price": 150, "subtotal": 150, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "Notified body review fee", "standard": "CE TEC", "price_unit": 1560, "support": "Yes", "price": 1560, "subtotal": 1560, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "Safety", "cert_name": "CE", "standard": "EN 62368-1 2nd or 3rd \n(leverage from CB)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "EU + EFTA", "scope": "Energy", "cert_name": "CE", "standard": "Lot26", "price_unit": 1500, "support": "Yes", "price": 1500, "subtotal": 1500, "country_total": 81210, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "United Kingdom", "scope": "RF", "cert_name": "Certified body review fee", "standard": "UKCA TEC", "price_unit": 1560, "support": "Yes", "price": 1560, "subtotal": 1560, "country_total": 1560, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Australia\nNew Zealand", "scope": "ALL", "cert_name": "RCM sDOC", "standard": "ALL", "price_unit": 600, "support": "Yes", "price": 600, "subtotal": 600, "country_total": 1600, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Australia\nNew Zealand", "scope": "ALL", "cert_name": "RSM sDOC", "standard": "ALL", "price_unit": 1000, "support": "Yes", "price": 1000, "subtotal": 1000, "country_total": 1600, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Australia\nNew Zealand", "scope": "EMC", "cert_name": "RCM", "standard": "AS/NZS CISPR32 Class B\n(combined with CE report)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 1600, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Australia\nNew Zealand", "scope": "EMC", "cert_name": "RCM", "standard": "AS/NZS CISPR15\n(combined with CE report)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 1600, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Australia\nNew Zealand", "scope": "RF", "cert_name": "RCM", "standard": "AS/NZS 4268 (based on CE report)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 1600, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Australia\nNew Zealand", "scope": "RF", "cert_name": "RCM", "standard": "AS/NZS 2771 (based on CE report)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 1600, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Japan", "scope": "EMC", "cert_name": "Japan (VCCI EMC class B)", "standard": "VCCI-V3 (without remote control function testing)", "price_unit": 1200, "support": "Yes", "price": 1200, "subtotal": 2050, "country_total": 35710, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Japan", "scope": "RF", "cert_name": "Telec", "standard": "Radio law 証明規則第2條第1項第19號", "price_unit": 1500, "support": "Yes", "price": 1500, "subtotal": 1780, "country_total": 35710, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Japan", "scope": "RF", "cert_name": "Telec", "standard": "Radio law 証明規則第2條第1項第19號", "price_unit": 2000, "support": "Yes", "price": 2000, "subtotal": 2280, "country_total": 35710, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Japan", "scope": "RF", "cert_name": "Telec", "standard": "Radio law 証明規則第2條第1項第19號", "price_unit": 1800, "support": "Yes", "price": 1800, "subtotal": 2500, "country_total": 35710, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Japan", "scope": "RF", "cert_name": "Telec", "standard": "Radio law 証明規則第2條第1項第19號", "price_unit": 1800, "support": "Yes", "price": 1800, "subtotal": 2500, "country_total": 35710, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Japan", "scope": "RF", "cert_name": "Telec", "standard": "Radio law 証明規則第2條第1項第19號", "price_unit": 900, "support": "Yes", "price": 900, "subtotal": 1600, "country_total": 35710, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Japan", "scope": "RF", "cert_name": "Telec", "standard": "Radio law 証明規則第2條第1項第19號", "price_unit": 4500, "support": "Yes", "price": 4500, "subtotal": 5200, "country_total": 35710, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Japan", "scope": "Telecom", "cert_name": "JATE", "standard": "TUV JRF Type Approval Certificate (Article 2-1-19, Article 2-1-19-3 (JRF))", "price_unit": 12700, "support": "Yes", "price": 12700, "subtotal": 12700, "country_total": 35710, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Japan", "scope": "Telecom", "cert_name": "JATE", "standard": "Article 9", "price_unit": 3400, "support": "Yes", "price": 3400, "subtotal": 3400, "country_total": 35710, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Japan", "scope": "Telecom", "cert_name": "JATE", "standard": "Article 9", "price_unit": 1700, "support": "Yes", "price": 1700, "subtotal": 1700, "country_total": 35710, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002 (based on FCC report)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002 (based on FCC report)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002 (based on FCC report)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002 (based on FCC report)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002 (based on FCC report)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002 (based on FCC report)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002 (based on FCC report)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "NCC Certification (for one model)", "price_unit": 750, "support": "Yes", "price": 750, "subtotal": 750, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Kuwait", "scope": "Safety", "cert_name": "KUCAS", "standard": "IEC 60950-1 2nd Edition am 1 + am 2\nIEC 62368-1:2014 (Second Edition)\nIEC/EN 62368-1:2018  (3rd Edition)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Mexico", "scope": "Safety", "cert_name": "NOM", "standard": "NOM-019-SCFI-1998 (follow 60950)\nNOM-001-SCFI-2018 (follow 60065)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Mexico", "scope": "RF", "cert_name": "NOM", "standard": "NOM-208", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Mexico", "scope": "RF", "cert_name": "IFTEL", "standard": "NOM-208", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Saudi Arabia", "scope": "", "cert_name": "Saudi Arabia (Saber Safety)", "standard": "IEC/EN 62368-1:2018  (3rd Edition)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Saudi Arabia", "scope": "Safety", "cert_name": "NRCS", "standard": "IEC 60950-1 2nd Edition am 1 + am 2\nIEC/EN 62368-1:2014 (Second Edition)\nIEC/EN 62368-1:2018  (3rd Edition)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Saudi Arabia", "scope": "EMC", "cert_name": "SABS", "standard": "CE", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Saudi Arabia", "scope": "RF", "cert_name": "ICASA", "standard": "CE", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Malaysia", "scope": "RF", "cert_name": "SIRIM", "standard": "CE", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Hong Kong", "scope": "RF", "cert_name": "HKCA", "standard": "CE", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Singapore", "scope": "RF", "cert_name": "IMDA", "standard": "CE", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "Singapore", "scope": "Safety", "cert_name": "PSB", "standard": "CB", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 750, "product": "Camera Doorbell", "lab": "TUV Rh"}, {"country": "", "scope": "", "cert_name": "", "standard": "Initial charge", "price_unit": null, "support": "", "price": null, "subtotal": null, "country_total": null, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "IEC 62368-1:2018  (3rd Edition)_indoor, non-UL", "price_unit": 5000, "support": "Yes", "price": 5000, "subtotal": 5920, "country_total": 26125, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "", "price_unit": null, "support": "", "price": null, "subtotal": null, "country_total": 26125, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "", "price_unit": null, "support": "", "price": null, "subtotal": null, "country_total": 26125, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "IEC 62368-1:2018  (3rd Edition)_outdoor, non-UL", "price_unit": 4000, "support": "Yes", "price": 4000, "subtotal": 4920, "country_total": 26125, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "", "price_unit": null, "support": "", "price": null, "subtotal": null, "country_total": 26125, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "IEC 62368-1:2018  (3rd Edition)_outdoor, UL", "price_unit": 5000, "support": "Yes", "price": null, "subtotal": null, "country_total": 26125, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "IEC 62368-1:2014 (2nd Edition), based on 62368-1:2018 (3rd Edition)", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 26125, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "CB-Scheme", "standard": "IEC 62368-1:2023", "price_unit": 5000, "support": "", "price": 5000, "subtotal": null, "country_total": 26125, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "Informtative report", "standard": "IEC 62471", "price_unit": 1335, "support": "Yes", "price": 1335, "subtotal": 1835, "country_total": 26125, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "Informtative report", "standard": "IEC 60529 (IEC 62368-1:2018  (3rd Edition) Annex Y)", "price_unit": 1350, "support": "Yes", "price": 1350, "subtotal": 1350, "country_total": 26125, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "International_Tentative evaluation", "scope": "Safety", "cert_name": "Informtative report", "standard": "IEC 62368-1:2018  (3rd Edition) Annex Y", "price_unit": 6000, "support": "Yes", "price": 6000, "subtotal": 9100, "country_total": 26125, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "EMC", "cert_name": "FCC", "standard": "FCC 47 CFR part 15 Class B", "price_unit": 650, "support": "Yes", "price": 650, "subtotal": 650, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "EMC", "cert_name": "FCC", "standard": "FCC 47 CFR part 15 Class B", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.247", "price_unit": 6000, "support": "Yes", "price": 6000, "subtotal": 6000, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.247", "price_unit": 1000, "support": "Yes", "price": 1000, "subtotal": 1000, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.407", "price_unit": 12000, "support": "Yes", "price": 12000, "subtotal": 12000, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.407", "price_unit": 13000, "support": "Yes", "price": 13000, "subtotal": 13000, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.407", "price_unit": 14000, "support": "Yes", "price": 14000, "subtotal": 14000, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.407", "price_unit": 16000, "support": "Yes", "price": 16000, "subtotal": 16000, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.407", "price_unit": 4000, "support": "Yes", "price": 4000, "subtotal": 4000, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.247", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.247", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 47 CFR part 15.247", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC 2.1091", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC Certification", "price_unit": 1800, "support": "Yes", "price": 1800, "subtotal": 1800, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC Certification", "price_unit": 2100, "support": "Yes", "price": 2100, "subtotal": 2100, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "USA", "scope": "RF", "cert_name": "FCC", "standard": "FCC Certification", "price_unit": 1500, "support": "Yes", "price": 1500, "subtotal": 1500, "country_total": 81850, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "Safety", "cert_name": "NRTL", "standard": "CAN/CSA-C22.2 No. 62368-1:2018\nUL 62368-1:2018, based on CB", "price_unit": 1500, "support": "Yes", "price": 1500, "subtotal": 1500, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "EMC", "cert_name": "IC", "standard": "ICES-003 (leverage from FCC)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "EMC", "cert_name": "IC", "standard": "ICES-005", "price_unit": 650, "support": "Yes", "price": 650, "subtotal": 650, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-247 (leverage from FCC)", "price_unit": 600, "support": "Yes", "price": 600, "subtotal": 600, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-247 (leverage part of data from FCC)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-247 (leverage part of data from FCC)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-247 (leverage part of data from FCC)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-247 (leverage part of data from FCC)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-247 (leverage part of data from FCC)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-247 (leverage from FCC)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "RF", "cert_name": "FCC", "standard": "RSS-247 (leverage from FCC)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "RF", "cert_name": "FCC", "standard": "RSS-247 (leverage from FCC)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "RF", "cert_name": "FCC", "standard": "RSS-247 (leverage from FCC)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "RSS-102 (leverage from FCC)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "IC Certification", "price_unit": 2300, "support": "Yes", "price": 2300, "subtotal": 2300, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "IC Certification", "price_unit": 2600, "support": "Yes", "price": 2600, "subtotal": 2600, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Canada", "scope": "RF", "cert_name": "IC", "standard": "IC Certification", "price_unit": 2000, "support": "Yes", "price": 2000, "subtotal": 2000, "country_total": 12650, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "EMC", "cert_name": "CE", "standard": "EN 55032:2015+A11:2020\nEN 55035:2017+A11:2020 \nEN 61000-3-2, EN 61000-3-3", "price_unit": 950, "support": "Yes", "price": 950, "subtotal": 950, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "EMC", "cert_name": "CE", "standard": "EN 301489 (leverage most of data from EN55032, 55035", "price_unit": 450, "support": "Yes", "price": 450, "subtotal": 450, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 300328", "price_unit": 6000, "support": "Yes", "price": 6000, "subtotal": 6000, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 300328", "price_unit": 8000, "support": "Yes", "price": 8000, "subtotal": 8000, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 301893", "price_unit": 9000, "support": "Yes", "price": 9000, "subtotal": 9000, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 301893", "price_unit": 10000, "support": "Yes", "price": 10000, "subtotal": 10000, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 301893", "price_unit": 11000, "support": "Yes", "price": 11000, "subtotal": 11000, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 301893", "price_unit": 13000, "support": "Yes", "price": 13000, "subtotal": 13000, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 301893", "price_unit": 4000, "support": "Yes", "price": 4000, "subtotal": 4000, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 300440", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 300440", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 300440", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 300440", "price_unit": 4000, "support": "Yes", "price": 4000, "subtotal": 4000, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "EN 300220", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "CE", "standard": "", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "RF", "cert_name": "Notified body review fee", "standard": "CE TEC", "price_unit": 2500, "support": "Yes", "price": 2500, "subtotal": 2500, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "EU + EFTA", "scope": "Safety", "cert_name": "CE", "standard": "EN 62368-1 2nd or 3rd (based on CB report)", "price_unit": 670, "support": "Yes", "price": 670, "subtotal": 670, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "United Kingdom", "scope": "RF", "cert_name": "", "standard": "EN 301893 for channel 144", "price_unit": 1000, "support": "", "price": null, "subtotal": 1000, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "United Kingdom", "scope": "RF", "cert_name": "Certified body review fee", "standard": "UKCA TEC", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 1000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Australia\nNew Zealand", "scope": "ALL", "cert_name": "RCM sDOC", "standard": "ALL", "price_unit": 650, "support": "Yes", "price": 650, "subtotal": 650, "country_total": 10250, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Australia\nNew Zealand", "scope": "EMC", "cert_name": "RCM", "standard": "AS/NZS CISPR32 Class B (Leverage from CE)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 10250, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Australia\nNew Zealand", "scope": "EMC", "cert_name": "RCM", "standard": "AS/NZS CISPR15 (Leverage feom CE)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 10250, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Australia\nNew Zealand", "scope": "RF", "cert_name": "RCM", "standard": "AS/NZS 4268 (Leverage from CE FCC)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 10250, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Australia\nNew Zealand", "scope": "RF", "cert_name": "RCM", "standard": "AS/NZS 2771", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 10250, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Australia\nNew Zealand", "scope": "RF", "cert_name": "RCM", "standard": "FCC 47 CFR part 15.247", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 10250, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Australia\nNew Zealand", "scope": "RF", "cert_name": "RCM", "standard": "FCC 47 CFR part 15.247", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 10250, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Australia\nNew Zealand", "scope": "RF", "cert_name": "RCM", "standard": "FCC 47 CFR part 15.247", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 10250, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Japan", "scope": "RF", "cert_name": "Telec", "standard": "Radio law Certification", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 71000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Japan", "scope": "RF", "cert_name": "Telec", "standard": "Radio law 証明規則第2條第1項第19號", "price_unit": 6000, "support": "Yes", "price": 6000, "subtotal": 6000, "country_total": 71000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Japan", "scope": "RF", "cert_name": "Telec", "standard": "Radio law 証明規則第2條第1項第19號", "price_unit": 8000, "support": "Yes", "price": 8000, "subtotal": 8000, "country_total": 71000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Japan", "scope": "RF", "cert_name": "Telec", "standard": "Radio law 証明規則第2條第1項第19號", "price_unit": 9000, "support": "Yes", "price": 9000, "subtotal": 9000, "country_total": 71000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Japan", "scope": "RF", "cert_name": "Telec", "standard": "Radio law 証明規則第2條第1項第19號", "price_unit": 10000, "support": "Yes", "price": 10000, "subtotal": 10000, "country_total": 71000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Japan", "scope": "RF", "cert_name": "Telec", "standard": "Radio law 証明規則第2條第1項第19號", "price_unit": 11000, "support": "Yes", "price": 11000, "subtotal": 11000, "country_total": 71000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Japan", "scope": "RF", "cert_name": "Telec", "standard": "Radio law 証明規則第2條第1項第19號", "price_unit": 12000, "support": "Yes", "price": 12000, "subtotal": 12000, "country_total": 71000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Japan", "scope": "RF", "cert_name": "Telec", "standard": "Radio law 証明規則第2條第1項第19號", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 71000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Japan", "scope": "Telecom", "cert_name": "JATE", "standard": "Jate Certification", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 71000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Japan", "scope": "Telecom", "cert_name": "JATE", "standard": "Article 9", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 71000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Japan", "scope": "Telecom", "cert_name": "JATE", "standard": "Article 9", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 71000, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Taiwan", "scope": "EMC", "cert_name": "BSMI", "standard": "BSMI Certification", "price_unit": 650, "support": "Yes", "price": 650, "subtotal": 650, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Taiwan", "scope": "EMC", "cert_name": "BSMI", "standard": "CNS 15936 (based on FCC report", "price_unit": 650, "support": "Yes", "price": 650, "subtotal": 650, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002 (based on FCC report)", "price_unit": 600, "support": "Yes", "price": 600, "subtotal": 600, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002 (based on FCC report)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": null, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002 (based on FCC report)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002 (based on FCC report)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002 (based on FCC report)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": null, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002 (based on FCC report)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002 (based on FCC report)", "price_unit": 170, "support": "Yes", "price": 170, "subtotal": 170, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002", "price_unit": 3000, "support": "Yes", "price": 3000, "subtotal": 3000, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "LP0002 (based on FCC report)", "price_unit": 300, "support": "Yes", "price": 300, "subtotal": 300, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Taiwan", "scope": "RF", "cert_name": "NCC", "standard": "NCC Certification", "price_unit": 500, "support": "Yes", "price": 500, "subtotal": 500, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Kuwait", "scope": "Safety", "cert_name": "KUCAS", "standard": "IEC 60950-1 2nd Edition am 1 + am 2\nIEC 62368-1:2014 (Second Edition)\nIEC/EN 62368-1:2018  (3rd Edition)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Mexico", "scope": "Safety", "cert_name": "NOM", "standard": "NOM-019-SCFI-1998 (follow 60950)\nNOM-001-SCFI-2018 (follow 60065)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Mexico", "scope": "RF", "cert_name": "NOM", "standard": "NOM-208", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Mexico", "scope": "RF", "cert_name": "IFTEL", "standard": "NOM-208", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Saudi Arabia", "scope": "", "cert_name": "Saudi Arabia (Saber Safety)", "standard": "IEC/EN 62368-1:2018  (3rd Edition)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Saudi Arabia", "scope": "Safety", "cert_name": "NRCS", "standard": "IEC 60950-1 2nd Edition am 1 + am 2\nIEC/EN 62368-1:2014 (Second Edition)\nIEC/EN 62368-1:2018  (3rd Edition)", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Saudi Arabia", "scope": "EMC", "cert_name": "SABS", "standard": "CE", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Saudi Arabia", "scope": "RF", "cert_name": "ICASA", "standard": "CE", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Malaysia", "scope": "RF", "cert_name": "SIRIM", "standard": "CE", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Hong Kong", "scope": "RF", "cert_name": "HKCA", "standard": "CE", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Singapore", "scope": "RF", "cert_name": "IMDA", "standard": "CE", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}, {"country": "Singapore", "scope": "Safety", "cert_name": "PSB", "standard": "CB", "price_unit": null, "support": "Yes", "price": null, "subtotal": null, "country_total": 12770, "product": "Camera Doorbell", "lab": "TUV SUD"}]}, "gma": [{"country": "Argentina", "auth": "ENACOM", "type": "In-country testing", "samples": "1 conducted OR 1 radiated", "mandatory": "Mandatory", "recommended": "KIWA", "leadtime": "12 weeks", "note": "Radar 24.05-24.25GHz can use FCC/CE report", "ul": 3200, "ul_lt": "11-13 weeks", "bv": 6000, "bv_lt": "15 weeks", "csa": 2800, "csa_lt": "12-14 weeks", "sporton": 4900, "sporton_lt": "12-14 weeks", "tuv": 2500, "tuv_lt": "12 weeks", "kiwa": 1930, "kiwa_lt": "12 weeks ✓"}, {"country": "Bahamas", "auth": "", "type": "Documentation only; FCC preferred", "samples": "No samples", "mandatory": "Not Mandatory", "recommended": "", "leadtime": "", "note": "No certification required", "ul": null, "ul_lt": "", "bv": 1200, "bv_lt": "7 weeks", "csa": null, "csa_lt": "", "sporton": 1550, "sporton_lt": "8-10 weeks", "tuv": null, "tuv_lt": "", "kiwa": null, "kiwa_lt": ""}, {"country": "Bahrain", "auth": "TRA", "type": "Documentation only; CE/RED reports", "samples": "No samples", "mandatory": "Voluntary", "recommended": "UL", "leadtime": "3 weeks", "note": "Voluntary but helpful for customs clearance; KIWA pricing assumes light scheme", "ul": 1000, "ul_lt": "3 weeks ✓", "bv": 2000, "bv_lt": "6 weeks", "csa": 1500, "csa_lt": "5-6 weeks", "sporton": 1200, "sporton_lt": "6-7 weeks", "tuv": 1200, "tuv_lt": "4 weeks", "kiwa": 1400, "kiwa_lt": "2-3 weeks"}, {"country": "Belize", "auth": "PUC", "type": "Documentation only; FCC (preferred) OR CE/RED reports", "samples": "No samples", "mandatory": "Mandatory", "recommended": "CSA", "leadtime": "6 weeks", "note": "Manufacturer can hold approval", "ul": 1500, "ul_lt": "5-7 weeks", "bv": 2100, "bv_lt": "3 weeks", "csa": 1500, "csa_lt": "6 weeks ✓", "sporton": 1700, "sporton_lt": "10-12 weeks", "tuv": 2000, "tuv_lt": "8 weeks", "kiwa": null, "kiwa_lt": ""}, {"country": "Chile", "auth": "SUBTEL", "type": "Documentation only; FCC OR CE/RED reports", "samples": "No samples", "mandatory": "Mandatory", "recommended": "CSA", "leadtime": "8 weeks", "note": "Manufacturer can hold approval", "ul": 1500, "ul_lt": "6-8 weeks", "bv": 2300, "bv_lt": "8 weeks", "csa": 950, "csa_lt": "8 weeks ✓", "sporton": null, "sporton_lt": "8 weeks (N/A)", "tuv": 850, "tuv_lt": "6 weeks", "kiwa": null, "kiwa_lt": ""}, {"country": "Colombia", "auth": "CRC", "type": "Documentation only; FCC (preferred) OR CE/RED reports", "samples": "No samples", "mandatory": "Mandatory", "recommended": "KIWA", "leadtime": "2 weeks", "note": "Exemption letter treated as mandatory", "ul": 900, "ul_lt": "2 weeks ✓", "bv": 1600, "bv_lt": "4 weeks", "csa": 1500, "csa_lt": "10 weeks", "sporton": 1000, "sporton_lt": "4-6 weeks", "tuv": 850, "tuv_lt": "3 weeks", "kiwa": 1008, "kiwa_lt": "2 weeks ✓"}, {"country": "Costa Rica", "auth": "SUTEL", "type": "Documentation only; FCC (preferred) OR CE/RED reports", "samples": "No samples", "mandatory": "Mandatory", "recommended": "KIWA", "leadtime": "3 weeks", "note": "Manufacturer can hold approval", "ul": 900, "ul_lt": "4 weeks", "bv": 1500, "bv_lt": "4 weeks", "csa": 1200, "csa_lt": "4 weeks", "sporton": 1200, "sporton_lt": "8-10 weeks", "tuv": 900, "tuv_lt": "4 weeks", "kiwa": 1106, "kiwa_lt": "3 weeks ✓"}, {"country": "Ecuador", "auth": "ARCOTEL", "type": "Documentation only; FCC (preferred) OR CE/RED reports", "samples": "No samples", "mandatory": "Voluntary", "recommended": "CSA", "leadtime": "8 weeks", "note": "Voluntary for SRD/BT; Mandatory for WWAN", "ul": 1000, "ul_lt": "6 weeks", "bv": 2500, "bv_lt": "6 weeks", "csa": 1650, "csa_lt": "8 weeks ✓", "sporton": 1500, "sporton_lt": "8-10 weeks", "tuv": 800, "tuv_lt": "5 weeks", "kiwa": 1528, "kiwa_lt": "3-4 weeks"}, {"country": "Egypt", "auth": "NTRA", "type": "Documentation only; FCC OR CE/RED reports; CB required", "samples": "No samples", "mandatory": "Mandatory", "recommended": "TUV", "leadtime": "5 weeks", "note": "KIWA pricing assumes light scheme; Samples may be requested case-by-case", "ul": 1200, "ul_lt": "4-6 weeks", "bv": 2500, "bv_lt": "4-6 weeks", "csa": 1200, "csa_lt": "4-6 weeks", "sporton": 1250, "sporton_lt": "6 weeks", "tuv": 800, "tuv_lt": "8 weeks", "kiwa": 1753, "kiwa_lt": "5 weeks ✓"}, {"country": "El Salvador", "auth": "SIGET", "type": "Documentation only; FCC (preferred) OR CE/RED reports", "samples": "No samples", "mandatory": "Voluntary", "recommended": "CSA", "leadtime": "6 weeks", "note": "Voluntary; FCC/CE accepted", "ul": 850, "ul_lt": "4-5 weeks", "bv": 1500, "bv_lt": "6-weeks", "csa": 1500, "csa_lt": "6 weeks ✓", "sporton": 900, "sporton_lt": "6-8 weeks", "tuv": 850, "tuv_lt": "4-5 weeks", "kiwa": 1008, "kiwa_lt": "3-4 weeks"}, {"country": "Guatemala", "auth": "SIT", "type": "Documentation only; FCC (preferred) OR CE/RED reports", "samples": "No samples", "mandatory": "Voluntary", "recommended": "CSA", "leadtime": "7 weeks", "note": "Voluntary for very low power devices", "ul": 1050, "ul_lt": "2-3 weeks ✓", "bv": 1300, "bv_lt": "5-7 weeks", "csa": 1100, "csa_lt": "7 weeks", "sporton": 1500, "sporton_lt": "8-10 weeks", "tuv": 800, "tuv_lt": "8 weeks", "kiwa": 977, "kiwa_lt": "3-4 weeks"}, {"country": "Honduras", "auth": "CONATEL", "type": "Documentation only; FCC (preferred) OR CE/RED reports", "samples": "No samples", "mandatory": "Mandatory", "recommended": "TUV", "leadtime": "8 weeks", "note": "Documentation-based evaluation using FCC/CE reports, If RF is eirp <10mW, no need to get type approval)", "ul": 2350, "ul_lt": "10-12 weeks", "bv": 2500, "bv_lt": "7 weeks", "csa": 3500, "csa_lt": "10 weeks", "sporton": 2500, "sporton_lt": "10-12 weeks", "tuv": 2200, "tuv_lt": "8 weeks ✓", "kiwa": 2526, "kiwa_lt": "9 weeks"}, {"country": "Jamaica", "auth": "SMA", "type": "Documentation only; FCC (preferred) OR CE/RED reports; CB required", "samples": "No samples", "mandatory": "Mandatory", "recommended": "KIWA", "leadtime": "4 weeks", "note": "Manufacturer can hold approval", "ul": 1100, "ul_lt": "6-7 weeks", "bv": 1700, "bv_lt": "7 weeks", "csa": 1500, "csa_lt": "3 weeks ✓", "sporton": 1600, "sporton_lt": "6-8 weeks", "tuv": 1100, "tuv_lt": "6-7 weeks", "kiwa": 1140, "kiwa_lt": "4 weeks"}, {"country": "Jordan", "auth": "TRC", "type": "Not mandatory (WiFi exempted)", "samples": "No samples", "mandatory": "Not Mandatory", "recommended": "", "leadtime": "", "note": "WiFi devices exempted from approval; Only cellular/LTE devices require certification", "ul": null, "ul_lt": "", "bv": null, "bv_lt": "", "csa": null, "csa_lt": "", "sporton": null, "sporton_lt": "", "tuv": null, "tuv_lt": "", "kiwa": 2573, "kiwa_lt": "4 weeks"}, {"country": "Kuwait", "auth": "CITRA", "type": "Documentation only; CE/RED reports", "samples": "No samples", "mandatory": "Mandatory", "recommended": "TUV", "leadtime": "6 weeks", "note": "CSA: CITRA $2000 (6 weeks) + KUCAS $800 (4 weeks)", "ul": 1200, "ul_lt": "6-8 weeks", "bv": 2500, "bv_lt": "7-12 weeks", "csa": 2800, "csa_lt": "4-6 weeks", "sporton": 1600, "sporton_lt": "4-6 weeks", "tuv": 1400, "tuv_lt": "6 weeks ✓", "kiwa": 2225, "kiwa_lt": "10 weeks"}, {"country": "Kuwait", "auth": "KUCAS", "type": "Documentation only; CE/RED reports", "samples": "No samples", "mandatory": "Mandatory", "recommended": "TUV", "leadtime": "6 weeks", "note": "CSA: CITRA $2000 (6 weeks) + KUCAS $800 (4 weeks)", "ul": 1200, "ul_lt": "6-8 weeks", "bv": 1000, "bv_lt": "3 weeks", "csa": 2800, "csa_lt": "4-6 weeks", "sporton": null, "sporton_lt": "3-4 weeks", "tuv": 1400, "tuv_lt": "6 weeks ✓", "kiwa": 2225, "kiwa_lt": "10 weeks"}, {"country": "Oman", "auth": "TRA", "type": "Documentation only; CE/RED reports", "samples": "1 normal sample (TUV only)", "mandatory": "Mandatory", "recommended": "TUV", "leadtime": "5 weeks", "note": "Each importer needs separate approval (KIWA); Certificate validity: 4 years", "ul": 1800, "ul_lt": "2-3 weeks", "bv": 2000, "bv_lt": "6 weeks", "csa": 1500, "csa_lt": "2-3 weeks", "sporton": 1100, "sporton_lt": "6-7 weeks", "tuv": 800, "tuv_lt": "5 weeks ✓", "kiwa": 2246, "kiwa_lt": "6 weeks"}, {"country": "Panama", "auth": "ASEP", "type": "Documentation only; FCC OR CE/RED reports", "samples": "No samples", "mandatory": "Mandatory", "recommended": "CSA", "leadtime": "7 weeks", "note": "Manufacturer can hold approval", "ul": 1050, "ul_lt": "7-9 weeks", "bv": 1600, "bv_lt": "7 weeks", "csa": 1200, "csa_lt": "7 weeks ✓", "sporton": 1600, "sporton_lt": "5-7 weeks", "tuv": 800, "tuv_lt": "8 weeks", "kiwa": 1698, "kiwa_lt": "8 weeks"}, {"country": "Paraguay", "auth": "CONATEL", "type": "Documentation only; FCC (preferred) OR CE/RED reports", "samples": "No samples", "mandatory": "Mandatory", "recommended": "TUV", "leadtime": "8 weeks", "note": "Documentation-based evaluation using FCC/CE reports; Certificate validity: 5 years (KIWA)", "ul": 1800, "ul_lt": "5-7 weeks ✓", "bv": 3500, "bv_lt": "20 weeks", "csa": 2000, "csa_lt": "8-10 weeks", "sporton": 1700, "sporton_lt": "12-14 weeks", "tuv": 1200, "tuv_lt": "8 weeks", "kiwa": 2474, "kiwa_lt": "12 weeks"}, {"country": "Peru", "auth": "MTC", "type": "Documentation only; FCC (preferred) OR CE/RED reports", "samples": "No samples", "mandatory": "Mandatory", "recommended": "CSA", "leadtime": "7 weeks", "note": "Mandatory if EIRP >10mW or connects to PSTN", "ul": 1300, "ul_lt": "6-8 weeks", "bv": 2000, "bv_lt": "6 weeks", "csa": 1500, "csa_lt": "7 weeks ✓", "sporton": 1400, "sporton_lt": "12-14 weeks", "tuv": 1000, "tuv_lt": "8 weeks", "kiwa": 1745, "kiwa_lt": "12 weeks"}, {"country": "Qatar", "auth": "CRA", "type": "Documentation only; CE/RED reports", "samples": "No samples", "mandatory": "Mandatory", "recommended": "UL", "leadtime": "4 weeks", "note": "Manufacturer can hold approval", "ul": 900, "ul_lt": "4-5 weeks ✓", "bv": 2500, "bv_lt": "6-9 weeks", "csa": 1200, "csa_lt": "5-6 weeks", "sporton": 1400, "sporton_lt": "4-6 weeks", "tuv": 1200, "tuv_lt": "5 weeks", "kiwa": 1485, "kiwa_lt": "3-4 weeks"}, {"country": "Saudi Arabia", "auth": "CITC/SABER", "type": "Documentation only; FCC OR CE/RED reports; CB required for PCOC", "samples": "No samples", "mandatory": "Mandatory", "recommended": "BV", "leadtime": "4 weeks", "note": "Real importer required SABER (BV/CSA/TUV/UL); KIWA/Sporton allow manufacturer", "ul": 1800, "ul_lt": "2-3 weeks ✓", "bv": 1000, "bv_lt": "4-5 weeks", "csa": 1800, "csa_lt": "4-5 weeks", "sporton": 1400, "sporton_lt": "3-4 weeks", "tuv": 1200, "tuv_lt": "6 weeks", "kiwa": 2148, "kiwa_lt": "1-2 weeks"}, {"country": "Singapore", "auth": "IMDA", "type": "Documentation only; CE/RED reports", "samples": "No samples", "mandatory": "Mandatory", "recommended": "UL", "leadtime": "1 week", "note": "Can use lab Local rep", "ul": 800, "ul_lt": "1-2 weeks ✓", "bv": 1700, "bv_lt": "2 weeks", "csa": 1500, "csa_lt": "3-4 weeks", "sporton": 1200, "sporton_lt": "3-4 weeks", "tuv": 1000, "tuv_lt": "3 weeks", "kiwa": null, "kiwa_lt": ""}, {"country": "South Africa", "auth": "ICASA", "type": "Documentation only; CE/RED reports; CB required", "samples": "No samples", "mandatory": "Mandatory", "recommended": "CSA", "leadtime": "8 weeks", "note": "Local rep: All labs; KIWA includes in fee / Sporton $500 / BV $1000", "ul": 1800, "ul_lt": "8-10 weeks", "bv": 2800, "bv_lt": "10-12 weeks", "csa": 1500, "csa_lt": "8-10 weeks ✓", "sporton": 2200, "sporton_lt": "10-12 weeks", "tuv": 1500, "tuv_lt": "8 weeks ✓", "kiwa": null, "kiwa_lt": ""}, {"country": "South Africa", "auth": "NRCS", "type": "Documentation only; CE/RED reports; CB required", "samples": "No samples", "mandatory": "Mandatory", "recommended": "CSA", "leadtime": "", "note": "Local rep: BV $1000", "ul": null, "ul_lt": "", "bv": 1300, "bv_lt": "24 weeks", "csa": null, "csa_lt": "", "sporton": null, "sporton_lt": "", "tuv": null, "tuv_lt": "", "kiwa": null, "kiwa_lt": ""}, {"country": "Trinidad and Tobago", "auth": "TATT", "type": "Documentation only; FCC (preferred) OR CE/RED reports", "samples": "1 normal sample (TUV and BV)", "mandatory": "Voluntary", "recommended": "CSA", "leadtime": "6 weeks", "note": "Voluntary but recommended; Computers/WiFi/BT devices can be imported without certification", "ul": 950, "ul_lt": "6-8 weeks", "bv": 1300, "bv_lt": "4 weeks", "csa": 1500, "csa_lt": "6 weeks ✓", "sporton": 1600, "sporton_lt": "6-8 weeks", "tuv": 950, "tuv_lt": "6-8 weeks", "kiwa": 1240, "kiwa_lt": "6 weeks"}, {"country": "Uruguay", "auth": "URSEC", "type": "Documentation only; FCC OR CE/RED reports", "samples": "No samples", "mandatory": "Mandatory", "recommended": "UL", "leadtime": "3 weeks", "note": "Certificate validity: 15 years (KIWA)", "ul": 1050, "ul_lt": "3-4 weeks ✓", "bv": 2000, "bv_lt": "3 weeks", "csa": 1800, "csa_lt": "4-6 weeks", "sporton": 2000, "sporton_lt": "4-6 weeks", "tuv": 1000, "tuv_lt": "10 weeks", "kiwa": 1463, "kiwa_lt": "8 weeks"}], "meta": {"files": ["BQB Certification RFQ_Allion_20260519.xlsx", "BQB Certification RFQ_Dekra_20260518.xlsx", "BQB Certification RFQ_TUV RH_20260519.xlsx", "EMC+RF Ring price list 20260515 TUV Rh.xlsx", "EMC+RF Ring price list 20260515_SUD.xlsx", "GMA  (WiFi 2.4GHz+BLE)_23 countries.xlsx", "Safety 2026-05-20 Price list USS.xlsx", "Safety Price for Ring  20260520 Wendell.xlsx", "Safety Price list Perfectlink.xlsx"], "generated": "2026-05-21 02:48:09"}};
+  document.getElementById("meta-info").innerHTML =
+    "Files: " + DATA.meta.files.length + " | Updated: " + DATA.meta.generated;
+  initFilters();
+  renderBQB();
+  renderSafetyWendell();
+  renderSafetySUD();
+  renderGMA();
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+function fmt(v) { return v != null ? '$' + v.toLocaleString() : '<span class="p-na">N/A</span>'; }
+function fmtRaw(v) { return v != null ? '$' + v.toLocaleString() : 'N/A'; }
+
+function colorPrice(v, min, max) {
+  if (v == null) return '<span class="p-na">N/A</span>';
+  if (v === min && min !== max) return `<span class="p-best">$${v.toLocaleString()} ✓</span>`;
+  if (v === max && min !== max) return `<span class="p-worst">$${v.toLocaleString()}</span>`;
+  return `$${v.toLocaleString()}`;
+}
+
+function renderBars(containerId, rows) {
+  const valid = rows.filter(r => r.price != null && r.price > 0);
+  if (!valid.length) { document.getElementById(containerId).innerHTML = ''; return; }
+  const maxP = Math.max(...valid.map(r => r.price));
+  const minP = Math.min(...valid.map(r => r.price));
+  document.getElementById(containerId).innerHTML = rows.filter(r=>r.price).map(r => {
+    const pct = Math.round((r.price / maxP) * 100);
+    const cls = r.price === minP ? 'c-best' : r.price === maxP ? 'c-worst' : 'c-mid';
+    return `<div class="bar-row">
+      <div class="bar-lbl" title="${r.label}">${r.label}</div>
+      <div class="bar-track">
+        <div class="bar-fill ${cls}" style="width:${Math.max(pct,2)}%">${pct>18?'$'+r.price.toLocaleString():''}</div>
+      </div>
+      <div class="bar-price">${pct<=18?'$'+r.price.toLocaleString():''}</div>
+    </div>`;
+  }).join('');
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    t.classList.toggle('active', ['bqb','safety_wendell','safety_sud','gma','summary'][i] === name);
+  });
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (name === 'summary') renderSummary();
+}
+
+// ── Init filters ──────────────────────────────────────────────
+function initFilters() {
+  // Safety Wendell products
+  const swProd = document.getElementById('sw-product');
+  const swProds = Object.keys(DATA.safety_wendell);
+  swProd.innerHTML = swProds.map(p => `<option value="${p}">${p}</option>`).join('');
+  initSWFilters();
+
+  // Safety SUD — Camera Doorbell only, no product selector needed
+  updateSUDFilters();
+
+  // GMA countries
+  initGMAFilters();
+}
+
+// ── BQB ───────────────────────────────────────────────────────
+function toggleAllBQB(chk) {
+  document.querySelectorAll('.bqb-chk').forEach(c => c.checked = chk.checked);
+  renderBQB();
+}
+
+function renderBQB() {
+  if (!DATA) return;
+
+  // Get selected keys from checkboxes
+  const selected = [...document.querySelectorAll('.bqb-chk:checked')].map(c => c.value);
+  const allRows = DATA.bqb;
+
+  // Sync "All Items" checkbox
+  const allChk = document.getElementById('chk-all');
+  const allKeys = [...document.querySelectorAll('.bqb-chk')].map(c => c.value);
+  if (allChk) allChk.checked = selected.length === allKeys.length;
+
+  // Group by item key, filtered by selection
+  const grouped = {};
+  allRows.forEach(r => {
+    if (!selected.includes(r.key)) return; // empty selection = show nothing
+    if (!grouped[r.key]) grouped[r.key] = { item: r.item, labs: [] };
+    grouped[r.key].labs.push(r);
+  });
+
+  const groups = Object.values(grouped);
+
+  // Collect all labs in order
+  const labOrder = [];
+  groups.forEach(g => g.labs.forEach(l => {
+    if (!labOrder.includes(l.lab)) labOrder.push(l.lab);
+  }));
+
+  // Lab totals (sum of selected items)
+  const labTotals = {};
+  labOrder.forEach(lab => labTotals[lab] = 0);
+  groups.forEach(g => {
+    g.labs.forEach(l => {
+      if (l.price) labTotals[l.lab] = (labTotals[l.lab]||0) + l.price;
+    });
+  });
+
+  const totalValues = Object.values(labTotals).filter(v => v > 0);
+  const minTotal = totalValues.length ? Math.min(...totalValues) : null;
+  const maxTotal = totalValues.length ? Math.max(...totalValues) : null;
+  const cheapestLab = minTotal != null ? labOrder.find(l => labTotals[l] === minTotal) : null;
+
+  // Summary cards
+  const allPrices = groups.flatMap(g => g.labs.map(l => l.price)).filter(p => p != null);
+  document.getElementById('bqb-cards').innerHTML = `
+    <div class="card info"><div class="lbl">Labs</div><div class="val">${labOrder.length}</div><div class="sub">${labOrder.join(' · ')}</div></div>
+    <div class="card info"><div class="lbl">Items Selected</div><div class="val">${groups.length}</div></div>
+    ${cheapestLab ? `<div class="card best"><div class="lbl">Cheapest Lab (Total)</div><div class="val">${cheapestLab}</div><div class="sub">$${labTotals[cheapestLab].toLocaleString()}</div></div>` : ''}
+    ${labOrder.filter(l=>l!==cheapestLab && labTotals[l]>0).map(l =>
+      `<div class="card ${labTotals[l]===maxTotal?'worst':''}"><div class="lbl">${l} Total</div><div class="val">$${labTotals[l].toLocaleString()}</div></div>`
+    ).join('')}
+  `;
+
+  // Chart — lab totals
+  const chartWrap = document.getElementById('bqb-chart');
+  if (labOrder.length > 0 && totalValues.length > 0) {
+    chartWrap.style.display = '';
+    renderBars('bqb-bars', labOrder
+      .filter(l => labTotals[l] > 0)
+      .map(l => ({ label: l, price: labTotals[l] }))
+    );
+  } else { chartWrap.style.display = 'none'; }
+
+  if (!groups.length) {
+    document.getElementById('bqb-table').innerHTML = '<div class="empty">No items selected</div>';
+    return;
+  }
+
+  // Table — Labs as columns, Items as rows, + Total row at bottom
+  let html = `<table><thead>
+    <tr>
+      <th rowspan="2" style="vertical-align:middle">Item</th>
+      ${labOrder.map(lab => `<th colspan="3" style="text-align:center;background:#1e3a5f;border-left:2px solid #2a4a7f">${lab}</th>`).join('')}
+    </tr>
+    <tr>
+      ${labOrder.map(() => `
+        <th style="text-align:center;font-size:0.75rem;background:#243d5c;border-left:2px solid #2a4a7f">Price (USD)</th>
+        <th style="font-size:0.75rem;background:#243d5c">Lead Time</th>
+        <th style="font-size:0.75rem;background:#243d5c">Samples</th>
+      `).join('')}
+    </tr>
+  </thead><tbody>`;
+
+  groups.forEach(g => {
+    const labMap = {};
+    g.labs.forEach(l => labMap[l.lab] = l);
+    const prices = g.labs.map(l=>l.price).filter(p=>p!=null);
+    const minP = prices.length ? Math.min(...prices) : null;
+    const maxP = prices.length ? Math.max(...prices) : null;
+
+    html += `<tr>
+      <td style="font-weight:600;border-right:2px solid #eee;white-space:nowrap">${g.item}</td>
+      ${labOrder.map(lab => {
+        const l = labMap[lab];
+        const price = l ? colorPrice(l.price, minP, maxP) : '<span class="p-na">—</span>';
+        const lt    = l?.leadtime || '—';
+        const samp  = l?.samples  || '—';
+        return `
+          <td style="text-align:center;border-left:2px solid #f0f0f0;font-weight:600">${price}</td>
+          <td style="color:#666;font-size:0.78rem;white-space:nowrap">${lt}</td>
+          <td style="color:#666;font-size:0.78rem">${samp}</td>`;
+      }).join('')}
+    </tr>`;
+  });
+
+  // ── Total row ──
+  html += `<tr style="background:#f0f4ff;border-top:3px solid #1a2b4a">
+    <td style="font-weight:700;color:#1a2b4a;border-right:2px solid #eee">💰 Total (Selected)</td>
+    ${labOrder.map(lab => {
+      const total = labTotals[lab] || 0;
+      const isCheapest = total > 0 && total === minTotal;
+      const isMost     = total > 0 && total === maxTotal && minTotal !== maxTotal;
+      const style = isCheapest ? 'color:#27ae60;font-weight:700;font-size:1rem'
+                  : isMost     ? 'color:#e74c3c;font-weight:700;font-size:1rem'
+                  :              'font-weight:700;font-size:1rem';
+      return `
+        <td colspan="3" style="text-align:center;border-left:2px solid #d0d8f0;${style}">
+          ${total > 0 ? '$' + total.toLocaleString() : '—'}
+          ${isCheapest ? ' ✓' : ''}
+        </td>`;
+    }).join('')}
+  </tr>`;
+
+  html += '</tbody></table>';
+  document.getElementById('bqb-table').innerHTML = html;
+}
+
+// ── Safety Wendell ────────────────────────────────────────────
+function initSWFilters() {
+  if (!DATA) return;
+  const prod = document.getElementById('sw-product').value;
+  const allRows = DATA.safety_wendell[prod] || [];
+
+  // Region checkboxes — always show all regions
+  const regions = [...new Set(allRows.map(r=>r.region).filter(Boolean))].sort();
+  const regDiv = document.getElementById('sw-region-checks');
+  const curRegs = [...document.querySelectorAll('.sw-reg-chk:checked')].map(c=>c.value);
+  regDiv.innerHTML = regions.map(reg => {
+    const checked = curRegs.length === 0 || curRegs.includes(reg) ? 'checked' : '';
+    return `<label style="display:flex;align-items:center;gap:4px;font-size:0.82rem;cursor:pointer;background:#f0f4ff;padding:4px 9px;border-radius:6px;border:1.5px solid #c5d3f0">
+      <input type="checkbox" value="${reg}" class="sw-reg-chk" onchange="updateSWStandards();renderSafetyWendell()" ${checked}> ${reg}
+    </label>`;
+  }).join('');
+
+  updateSWStandards();
+}
+
+function updateSWStandards() {
+  if (!DATA) return;
+  const prod = document.getElementById('sw-product').value;
+  const allRows = DATA.safety_wendell[prod] || [];
+
+  // Filter rows by selected regions
+  const selRegs = [...document.querySelectorAll('.sw-reg-chk:checked')].map(c=>c.value);
+  const filteredRows = selRegs.length ? allRows.filter(r => selRegs.includes(r.region)) : [];
+
+  // Get unique standards from filtered rows — deduplicate
+  const items = [...new Set(filteredRows.map(r=>r.item).filter(Boolean))].sort();
+
+  const stdDiv = document.getElementById('sw-standard-checks');
+  const curStds = [...document.querySelectorAll('.sw-std-chk:checked')].map(c=>c.value);
+
+  stdDiv.innerHTML = items.map(item => {
+    const checked = curStds.length === 0 || curStds.includes(item) ? 'checked' : '';
+    return `<label style="display:flex;align-items:center;gap:4px;font-size:0.78rem;cursor:pointer;background:#f8faff;padding:3px 8px;border-radius:5px;border:1px solid #dde4f5;white-space:nowrap">
+      <input type="checkbox" value="${item}" class="sw-std-chk" onchange="renderSafetyWendell()" ${checked}> ${item}
+    </label>`;
+  }).join('');
+}
+
+function renderSafetyWendell() {
+  if (!DATA) return;
+  const prod = document.getElementById('sw-product').value;
+  let allRows = DATA.safety_wendell[prod] || [];
+
+  const selRegs = [...document.querySelectorAll('.sw-reg-chk:checked')].map(c=>c.value);
+  const selStds = [...document.querySelectorAll('.sw-std-chk:checked')].map(c=>c.value);
+
+  let rows = allRows;
+  if (selRegs.length) rows = rows.filter(r => selRegs.includes(r.region));
+  else rows = []; // nothing selected = show nothing
+  if (selStds.length) rows = rows.filter(r => selStds.includes(r.item));
+  // if standards box exists but nothing checked, also empty
+  const stdChks = document.querySelectorAll('.sw-std-chk');
+  if (stdChks.length > 0 && selStds.length === 0) rows = [];
+
+  const labOrder = [...new Set(rows.map(r => r.source_lab).filter(Boolean))].sort();
+
+  const labULTotals = {}, labTUVTotals = {};
+  labOrder.forEach(l => { labULTotals[l] = 0; labTUVTotals[l] = 0; });
+  rows.forEach(r => {
+    const l = r.source_lab || '';
+    if (l) {
+      labULTotals[l]  = (labULTotals[l]  || 0) + (r.ul_lab||0)  + (r.ul_wd||0);
+      labTUVTotals[l] = (labTUVTotals[l] || 0) + (r.tuv_lab||0) + (r.tuv_wd||0);
+    }
+  });
+
+  const ulSum  = Object.values(labULTotals).reduce((a,b)=>a+b,0);
+  const tuvSum = Object.values(labTUVTotals).reduce((a,b)=>a+b,0);
+  const diff   = Math.abs(ulSum - tuvSum);
+  const cheaper = ulSum <= tuvSum ? 'UL' : 'TUV/SUD';
+
+  document.getElementById('sw-cards').innerHTML = `
+    <div class="card info"><div class="lbl">Items</div><div class="val">${rows.length}</div></div>
+    <div class="card ${ulSum<=tuvSum?'best':'worst'}"><div class="lbl">CB by UL (Total)</div><div class="val">$${ulSum.toLocaleString()}</div><div class="sub">Cert/Rep. + WD</div></div>
+    <div class="card ${tuvSum<=ulSum?'best':'worst'}"><div class="lbl">CB by TUV/SUD (Total)</div><div class="val">$${tuvSum.toLocaleString()}</div><div class="sub">Cert/Rep. + WD</div></div>
+    <div class="card best"><div class="lbl">Savings</div><div class="val" style="color:#27ae60">$${diff.toLocaleString()}</div><div class="sub">${cheaper} is cheaper</div></div>
+  `;
+
+  const chartWrap = document.getElementById('sw-chart');
+  if (labOrder.length) {
+    chartWrap.style.display = '';
+    const barData = [];
+    labOrder.forEach(l => {
+      barData.push({ label: `${l} UL`,  price: labULTotals[l]  });
+      barData.push({ label: `${l} TUV`, price: labTUVTotals[l] });
+    });
+    renderBars('sw-bars', barData);
+  } else { chartWrap.style.display = 'none'; }
+
+  // Group by item for cross-lab comparison
+  const itemMap = {};
+  rows.forEach(r => {
+    const key = `${r.region}||${r.item}`;
+    if (!itemMap[key]) itemMap[key] = { region: r.region, compliance: r.compliance||'', item: r.item, labs: {} };
+    itemMap[key].labs[r.source_lab] = r;
+  });
+
+  let html = `<table><thead>
+    <tr>
+      <th rowspan="2" style="vertical-align:middle">Region</th>
+      <th rowspan="2" style="vertical-align:middle">Compliance</th>
+      <th rowspan="2" style="vertical-align:middle">Standard / Item</th>
+      ${labOrder.map(lab => `<th colspan="${lab==='Perfectlink'?2:5}" style="text-align:center;background:#1e3a5f;border-left:2px solid #2a4a7f">${lab}</th>`).join('')}
+    </tr>
+    <tr>
+      ${labOrder.map(lab => {
+        if (lab === 'Perfectlink') return `
+          <th style="font-size:0.72rem;background:#243d5c;border-left:2px solid #2a4a7f;white-space:nowrap">UL Cert/Rep.</th>
+          <th style="font-size:0.72rem;background:#1e3a5f;white-space:nowrap">TUV SUD<br>Cert/Rep.</th>`;
+        if (lab === 'USS') return `
+          <th style="font-size:0.72rem;background:#243d5c;border-left:2px solid #2a4a7f;white-space:nowrap">UL Cert/Rep.</th>
+          <th style="font-size:0.72rem;background:#1e3a5f;white-space:nowrap">TUV SUD<br>Cert/Rep.</th>
+          <th style="font-size:0.72rem;background:#243d5c;white-space:nowrap">USS for<br>Test</th>
+          <th style="font-size:0.72rem;background:#243d5c">UL Total</th>
+          <th style="font-size:0.72rem;background:#1e3a5f">TUV Total</th>`;
+        return `
+          <th style="font-size:0.72rem;background:#243d5c;border-left:2px solid #2a4a7f;white-space:nowrap">UL Cert/Rep.</th>
+          <th style="font-size:0.72rem;background:#1e3a5f;white-space:nowrap">TUV SUD<br>Cert/Rep.</th>
+          <th style="font-size:0.72rem;background:#243d5c;white-space:nowrap">WD for<br>Test</th>
+          <th style="font-size:0.72rem;background:#243d5c">UL Total</th>
+          <th style="font-size:0.72rem;background:#1e3a5f">TUV Total</th>`;
+      }).join('')}
+    </tr>
+  </thead><tbody>`;
+
+  // Track totals per lab
+  const totals = {};
+  labOrder.forEach(l => totals[l] = { ul: 0, tuv: 0 });
+
+  Object.values(itemMap).forEach(info => {
+    const allUL  = labOrder.map(l => info.labs[l] ? (info.labs[l].ul_lab||0)+(info.labs[l].ul_wd||0) : null).filter(v=>v!=null&&v>0);
+    const allTUV = labOrder.map(l => info.labs[l] ? (info.labs[l].tuv_lab||0)+(info.labs[l].tuv_wd||0) : null).filter(v=>v!=null&&v>0);
+    const minUL  = allUL.length  ? Math.min(...allUL)  : null;
+    const maxUL  = allUL.length  ? Math.max(...allUL)  : null;
+    const minTUV = allTUV.length ? Math.min(...allTUV) : null;
+    const maxTUV = allTUV.length ? Math.max(...allTUV) : null;
+
+    html += `<tr>
+      <td><span class="badge bg-blue">${info.region||'—'}</span></td>
+      <td style="color:#666;font-size:0.8rem">${info.compliance||'—'}</td>
+      <td style="font-weight:600;max-width:260px">${info.item}</td>
+      ${labOrder.map(lab => {
+        const r = info.labs[lab];
+        const cols = lab === 'Perfectlink' ? 2 : 5;
+        if (!r) return `<td colspan="${cols}" style="text-align:center;color:#ccc;border-left:2px solid #f0f0f0">—</td>`;
+        const ulT  = (r.ul_lab||0) + (r.ul_wd||0);
+        const tuvT = (r.tuv_lab||0) + (r.tuv_wd||0);
+        totals[lab].ul  += ulT;
+        totals[lab].tuv += tuvT;
+        const ulCls  = ulT  > 0 && ulT  === minUL  && minUL  !== maxUL  ? 'p-best' : ulT  > 0 && ulT  === maxUL  && minUL !== maxUL  ? 'p-worst' : '';
+        const tuvCls = tuvT > 0 && tuvT === minTUV && minTUV !== maxTUV ? 'p-best' : tuvT > 0 && tuvT === maxTUV && minTUV !== maxTUV ? 'p-worst' : '';
+        if (lab === 'Perfectlink') return `
+          <td style="border-left:2px solid #f0f0f0"><span class="${ulCls}">${r.ul_lab ? '$'+r.ul_lab.toLocaleString() : '—'}</span></td>
+          <td style="background:#fafafe"><span class="${tuvCls}">${r.tuv_lab ? '$'+r.tuv_lab.toLocaleString() : '—'}</span></td>`;
+        if (lab === 'USS') return `
+          <td style="border-left:2px solid #f0f0f0">${r.ul_lab ? '$'+r.ul_lab.toLocaleString() : '—'}</td>
+          <td style="background:#fafafe">${r.tuv_lab ? '$'+r.tuv_lab.toLocaleString() : '—'}</td>
+          <td>${r.ul_wd  ? '$'+r.ul_wd.toLocaleString()  : '—'}</td>
+          <td><span class="${ulCls}">${ulT > 0 ? '$'+ulT.toLocaleString() : '—'}</span></td>
+          <td style="background:#fafafe"><span class="${tuvCls}">${tuvT > 0 ? '$'+tuvT.toLocaleString() : '—'}</span></td>`;
+        return `
+          <td style="border-left:2px solid #f0f0f0">${r.ul_lab ? '$'+r.ul_lab.toLocaleString() : '—'}</td>
+          <td style="background:#fafafe">${r.tuv_lab ? '$'+r.tuv_lab.toLocaleString() : '—'}</td>
+          <td>${r.ul_wd  ? '$'+r.ul_wd.toLocaleString()  : '—'}</td>
+          <td><span class="${ulCls}">${ulT > 0 ? '$'+ulT.toLocaleString() : '—'}</span></td>
+          <td style="background:#fafafe"><span class="${tuvCls}">${tuvT > 0 ? '$'+tuvT.toLocaleString() : '—'}</span></td>`;
+      }).join('')}
+    </tr>`;
+  });
+
+  // ── Total row ──
+  const allULTotals  = labOrder.map(l => totals[l].ul).filter(v=>v>0);
+  const allTUVTotals = labOrder.map(l => totals[l].tuv).filter(v=>v>0);
+  const minULT  = allULTotals.length  ? Math.min(...allULTotals)  : null;
+  const minTUVT = allTUVTotals.length ? Math.min(...allTUVTotals) : null;
+
+  html += `<tr style="background:#f0f4ff;border-top:3px solid #1a2b4a;font-weight:700">
+    <td colspan="3" style="color:#1a2b4a">💰 Total (Selected Items)</td>
+    ${labOrder.map(lab => {
+      const ulT  = totals[lab].ul;
+      const tuvT = totals[lab].tuv;
+      const cols = lab === 'Perfectlink' ? 2 : 5;
+      const ulCls  = ulT  > 0 && ulT  === minULT  ? 'p-best' : '';
+      const tuvCls = tuvT > 0 && tuvT === minTUVT ? 'p-best' : '';
+      if (lab === 'Perfectlink') return `
+        <td style="border-left:2px solid #d0d8f0"><span class="${ulCls}">${ulT > 0 ? '$'+ulT.toLocaleString() : '—'}</span></td>
+        <td><span class="${tuvCls}">${tuvT > 0 ? '$'+tuvT.toLocaleString() : '—'}</span></td>`;
+      if (lab === 'USS') return `
+        <td style="border-left:2px solid #d0d8f0">—</td>
+        <td>—</td>
+        <td>—</td>
+        <td><span class="${ulCls}">${ulT > 0 ? '$'+ulT.toLocaleString() : '—'}</span></td>
+        <td><span class="${tuvCls}">${tuvT > 0 ? '$'+tuvT.toLocaleString() : '—'}</span></td>`;
+      return `
+        <td style="border-left:2px solid #d0d8f0">—</td>
+        <td>—</td>
+        <td>—</td>
+        <td><span class="${ulCls}">${ulT > 0 ? '$'+ulT.toLocaleString() : '—'}</span></td>
+        <td><span class="${tuvCls}">${tuvT > 0 ? '$'+tuvT.toLocaleString() : '—'}</span></td>`;
+    }).join('')}
+  </tr>`;
+
+  html += '</tbody></table>';
+  document.getElementById('sw-table').innerHTML = Object.keys(itemMap).length ? html : '<div class="empty">No data for this selection</div>';
+}
+
+// ── Safety SUD / EMC RF ──────────────────────────────────────
+const SUD_EXCLUDE_COUNTRIES = new Set(['Kuwait', 'Saudi Arabia', 'Malaysia', 'Hong Kong', 'Singapore', 'International_Tentative evaluation']);
+const SUD_EXCLUDE_SCOPES    = new Set(['Safety', 'ALL', 'Energy']);
+
+function updateSUDFilters() {
+  if (!DATA) return;
+  const rows = DATA.safety_sud['Camera Doorbell'] || [];
+
+  // Countries — exclude specified ones
+  const countries = [...new Set(rows.map(r=>r.country).filter(c => c && !SUD_EXCLUDE_COUNTRIES.has(c)))].sort();
+  // Scopes — exclude Safety
+  const scopes = [...new Set(rows.map(r=>r.scope).filter(s => s && !SUD_EXCLUDE_SCOPES.has(s)))].sort();
+
+  const curCtys  = [...document.querySelectorAll('.sud-cty-chk:checked')].map(c=>c.value);
+  const curScps  = [...document.querySelectorAll('.sud-scp-chk:checked')].map(c=>c.value);
+
+  document.getElementById('sud-country').innerHTML = countries.map(c => {
+    const checked = curCtys.length === 0 || curCtys.includes(c) ? 'checked' : '';
+    return `<label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;cursor:pointer;background:#f0f4ff;padding:3px 8px;border-radius:5px;border:1.5px solid #c5d3f0;white-space:nowrap">
+      <input type="checkbox" value="${c}" class="sud-cty-chk" onchange="renderSafetySUD()" ${checked}> ${c}
+    </label>`;
+  }).join('');
+
+  document.getElementById('sud-scope').innerHTML = scopes.map(s => {
+    const checked = curScps.length === 0 || curScps.includes(s) ? 'checked' : '';
+    return `<label style="display:flex;align-items:center;gap:4px;font-size:0.8rem;cursor:pointer;background:#f0f4ff;padding:3px 8px;border-radius:5px;border:1.5px solid #c5d3f0;white-space:nowrap">
+      <input type="checkbox" value="${s}" class="sud-scp-chk" onchange="renderSafetySUD()" ${checked}> ${s}
+    </label>`;
+  }).join('');
+}
+
+function renderSafetySUD() {
+  if (!DATA) return;
+  updateSUDFilters();
+
+  const selCtys = [...document.querySelectorAll('.sud-cty-chk:checked')].map(c=>c.value);
+  const selScps = [...document.querySelectorAll('.sud-scp-chk:checked')].map(c=>c.value);
+
+  let allRows = DATA.safety_sud['Camera Doorbell'] || [];
+
+  // Apply exclusions
+  allRows = allRows.filter(r =>
+    !SUD_EXCLUDE_COUNTRIES.has(r.country) &&
+    !SUD_EXCLUDE_SCOPES.has(r.scope)
+  );
+
+  // Apply checkbox filters — empty = show nothing
+  if (selCtys.length === 0 || selScps.length === 0) {
+    document.getElementById('sud-cards').innerHTML = '';
+    document.getElementById('sud-table').innerHTML = '<div class="empty">Please select at least one Country and Scope</div>';
+    return;
+  }
+  allRows = allRows.filter(r => selCtys.includes(r.country) && selScps.includes(r.scope));
+
+  // Get lab names
+  const labOrder = [...new Set(allRows.map(r => r.lab).filter(Boolean))].sort();
+
+  // Build rows list — keep all rows, group by country for display
+  // Use index-based key to preserve all rows (including duplicates with different prices)
+  const tableRows = allRows.map((r, i) => ({
+    country:   r.country,
+    scope:     r.scope,
+    cert_name: r.cert_name,
+    standard:  r.standard,
+    lab:       r.lab,
+    price:     r.price,
+    idx:       i,
+  }));
+
+  // Sort by country, then scope, then standard
+  tableRows.sort((a, b) => {
+    if (a.country < b.country) return -1;
+    if (a.country > b.country) return 1;
+    if (a.scope < b.scope) return -1;
+    if (a.scope > b.scope) return 1;
+    if (a.standard < b.standard) return -1;
+    if (a.standard > b.standard) return 1;
+    return 0;
+  });
+
+  // Deduplicate: same country+scope+cert+standard+lab → keep only one (highest price or first)
+  const seen = new Set();
+  const dedupedRows = [];
+  tableRows.forEach(r => {
+    const key = `${r.country}||${r.scope}||${r.cert_name}||${r.standard}||${r.lab}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      dedupedRows.push(r);
+    }
+  });
+
+  // Group by country+scope+cert+standard for side-by-side lab comparison
+  const itemMap = {};
+  dedupedRows.forEach(r => {
+    const key = `${r.country}||${r.scope}||${r.cert_name}||${r.standard}`;
+    if (!itemMap[key]) itemMap[key] = { country: r.country, scope: r.scope, cert_name: r.cert_name, standard: r.standard, labs: {} };
+    itemMap[key].labs[r.lab] = r;
+  });
+
+  // ── Summary cards — based on deduplicated itemMap ──
+  const labTotals = {};
+  labOrder.forEach(l => labTotals[l] = 0);
+  Object.values(itemMap).forEach(info => {
+    labOrder.forEach(lab => {
+      const p = info.labs[lab]?.price;
+      if (p) labTotals[lab] = (labTotals[lab] || 0) + p;
+    });
+  });
+  const sortedLabs = Object.entries(labTotals).filter(e=>e[1]>0).sort((a,b)=>a[1]-b[1]);
+  const cheapest = sortedLabs[0];
+  const priciest = sortedLabs[sortedLabs.length - 1];
+  const savings  = sortedLabs.length > 1 ? priciest[1] - cheapest[1] : 0;
+
+  document.getElementById('sud-cards').innerHTML = `
+    <div class="card info"><div class="lbl">Product</div><div class="val" style="font-size:1rem">Camera Doorbell</div><div class="sub">EMC/RF</div></div>
+    <div class="card info"><div class="lbl">Items</div><div class="val">${Object.keys(itemMap).length}</div></div>
+    ${cheapest ? `<div class="card best"><div class="lbl">最低費用 (${cheapest[0]})</div><div class="val">$${cheapest[1].toLocaleString()}</div></div>` : ''}
+    ${savings > 0 ? `<div class="card best"><div class="lbl">節省費用</div><div class="val" style="color:#27ae60">$${savings.toLocaleString()}</div><div class="sub">${cheapest[0]} vs ${priciest[0]}</div></div>` : ''}
+  `;
+
+  let html = `<table><thead><tr>
+    <th>Country / Region</th><th>Scope</th><th>Cert Name</th><th>Standard</th>
+    ${labOrder.map(lab => `<th style="text-align:center;background:#1e3a5f;border-left:2px solid #2a4a7f">${lab}<br><span style="font-size:0.7rem;font-weight:400">Price (USD)</span></th>`).join('')}
+  </tr></thead><tbody>`;
+
+  let lastCountry = '';
+  Object.values(itemMap).forEach(info => {
+    const isNew = info.country !== lastCountry;
+    if (isNew) lastCountry = info.country;
+
+    const prices = labOrder.map(l => info.labs[l]?.price).filter(v=>v!=null&&v>0);
+    const minP = prices.length ? Math.min(...prices) : null;
+    const maxP = prices.length ? Math.max(...prices) : null;
+
+    html += `<tr ${isNew ? 'style="border-top:2px solid #dde"' : ''}>
+      <td style="font-weight:${isNew?'700':'400'};color:${isNew?'#1a2b4a':'#666'}">${isNew ? info.country : ''}</td>
+      <td><span class="badge bg-purple">${info.scope||'—'}</span></td>
+      <td style="color:#555;font-size:0.78rem">${info.cert_name||'—'}</td>
+      <td style="font-size:0.78rem;max-width:240px">${info.standard||'—'}</td>
+      ${labOrder.map(lab => {
+        const r = info.labs[lab];
+        if (!r) return `<td style="text-align:center;color:#ccc;border-left:1px solid #f0f0f0">—</td>`;
+        const p = r.price;
+        const cls = p > 0 && p === minP && minP !== maxP ? 'p-best' : p > 0 && p === maxP && minP !== maxP ? 'p-worst' : '';
+        return `<td style="text-align:center;font-weight:600;border-left:1px solid #f0f0f0"><span class="${cls}">${p ? '$'+p.toLocaleString() : '—'}</span></td>`;
+      }).join('')}
+    </tr>`;
+  });
+
+  // ── Total row ──
+  const labTotalsRow = {};
+  labOrder.forEach(l => labTotalsRow[l] = 0);
+  Object.values(itemMap).forEach(info => {
+    labOrder.forEach(lab => {
+      const p = info.labs[lab]?.price;
+      if (p) labTotalsRow[lab] = (labTotalsRow[lab] || 0) + p;
+    });
+  });
+  const totalValues = labOrder.map(l => labTotalsRow[l]).filter(v => v > 0);
+  const minTotal = totalValues.length ? Math.min(...totalValues) : null;
+
+  html += `<tr style="background:#f0f4ff;border-top:3px solid #1a2b4a;font-weight:700">
+    <td colspan="4" style="color:#1a2b4a">💰 Total (Selected)</td>
+    ${labOrder.map(lab => {
+      const t = labTotalsRow[lab] || 0;
+      const cls = t > 0 && t === minTotal ? 'p-best' : '';
+      return `<td style="text-align:center;border-left:1px solid #d0d8f0"><span class="${cls}">${t > 0 ? '$'+t.toLocaleString() : '—'}</span></td>`;
+    }).join('')}
+  </tr>`;
+
+  html += '</tbody></table>';
+  document.getElementById('sud-table').innerHTML = Object.keys(itemMap).length ? html : '<div class="empty">No data</div>';
+}
+
+function resetSUD() {
+  document.querySelectorAll('.sud-cty-chk').forEach(c => c.checked = true);
+  document.querySelectorAll('.sud-scp-chk').forEach(c => c.checked = true);
+  renderSafetySUD();
+}
+
+// ── GMA ───────────────────────────────────────────────────────
+function initGMAFilters() {
+  if (!DATA) return;
+  const countries  = [...new Set(DATA.gma.map(r => r.country))].sort();
+  const mandValues = ['Mandatory', 'Voluntary', 'Not Mandatory'];
+
+  const curCtys = [...document.querySelectorAll('.gma-cty-chk:checked')].map(c=>c.value);
+  const curMand = [...document.querySelectorAll('.gma-mnd-chk:checked')].map(c=>c.value);
+  const curLabs = [...document.querySelectorAll('.gma-lab-chk:checked')].map(c=>c.value);
+
+  document.getElementById('gma-country').innerHTML = countries.map(c => {
+    const checked = curCtys.length === 0 || curCtys.includes(c) ? 'checked' : '';
+    return `<label style="display:flex;align-items:center;gap:4px;font-size:0.78rem;cursor:pointer;background:#f0f4ff;padding:3px 8px;border-radius:5px;border:1.5px solid #c5d3f0;white-space:nowrap">
+      <input type="checkbox" value="${c}" class="gma-cty-chk" onchange="renderGMA()" ${checked}> ${c}
+    </label>`;
+  }).join('');
+
+  document.getElementById('gma-mandatory').innerHTML = mandValues.map(m => {
+    const checked = curMand.length === 0 || curMand.includes(m) ? 'checked' : '';
+    const cls = m==='Mandatory'?'bg-red':m==='Voluntary'?'bg-yellow':'bg-gray';
+    return `<label style="display:flex;align-items:center;gap:4px;font-size:0.78rem;cursor:pointer;background:#f8faff;padding:3px 8px;border-radius:5px;border:1px solid #dde4f5;white-space:nowrap">
+      <input type="checkbox" value="${m}" class="gma-mnd-chk" onchange="renderGMA()" ${checked}> <span class="badge ${cls}">${m}</span>
+    </label>`;
+  }).join('');
+
+  document.getElementById('gma-lab').innerHTML = GMA_LABS.map(lab => {
+    const checked = curLabs.length === 0 || curLabs.includes(lab) ? 'checked' : '';
+    return `<label style="display:flex;align-items:center;gap:4px;font-size:0.78rem;cursor:pointer;background:#f0f4ff;padding:3px 8px;border-radius:5px;border:1.5px solid #c5d3f0;white-space:nowrap">
+      <input type="checkbox" value="${lab}" class="gma-lab-chk" onchange="renderGMA()" ${checked}> ${GMA_LABELS[lab]}
+    </label>`;
+  }).join('');
+}
+
+function renderGMA() {
+  if (!DATA) return;
+
+  const selCtys = [...document.querySelectorAll('.gma-cty-chk:checked')].map(c=>c.value);
+  const selMand = [...document.querySelectorAll('.gma-mnd-chk:checked')].map(c=>c.value);
+  const selLabs = [...document.querySelectorAll('.gma-lab-chk:checked')].map(c=>c.value);
+  const recFilter = document.getElementById('gma-rec').value;
+
+  if (!selCtys.length || !selMand.length || !selLabs.length) {
+    document.getElementById('gma-cards').innerHTML = '';
+    document.getElementById('gma-chart').style.display = 'none';
+    document.getElementById('gma-table').innerHTML = '<div class="empty">Please select at least one option in each filter</div>';
+    return;
+  }
+
+  let rows = DATA.gma.filter(r =>
+    selCtys.includes(r.country) &&
+    selMand.includes(r.mandatory)
+  );
+  if (recFilter !== 'all') rows = rows.filter(r => r.recommended === recFilter);
+
+  const activeLabs = selLabs;
+
+  // Lab totals (sum of selected countries)
+  const labTotals = {};
+  activeLabs.forEach(lab => {
+    const vals = rows.map(r=>r[lab]).filter(v=>v!=null);
+    if (vals.length) labTotals[lab] = vals.reduce((a,b)=>a+b,0);
+  });
+  const sortedLabs = Object.entries(labTotals).sort((a,b)=>a[1]-b[1]);
+  const cheapest = sortedLabs[0];
+  const priciest = sortedLabs[sortedLabs.length-1];
+  const savings  = sortedLabs.length > 1 ? priciest[1] - cheapest[1] : 0;
+
+  document.getElementById('gma-cards').innerHTML = `
+    <div class="card info"><div class="lbl">Countries</div><div class="val">${rows.length}</div></div>
+    <div class="card info"><div class="lbl">Mandatory</div><div class="val">${rows.filter(r=>r.mandatory==='Mandatory').length}</div><div class="sub">of ${rows.length}</div></div>
+    ${cheapest ? `<div class="card best"><div class="lbl">最低費用 (${GMA_LABELS[cheapest[0]]})</div><div class="val">$${cheapest[1].toLocaleString()}</div></div>` : ''}
+    ${savings > 0 ? `<div class="card best"><div class="lbl">節省費用</div><div class="val" style="color:#27ae60">$${savings.toLocaleString()}</div><div class="sub">${GMA_LABELS[cheapest[0]]} vs ${GMA_LABELS[priciest[0]]}</div></div>` : ''}
+  `;
+
+  const chartWrap = document.getElementById('gma-chart');
+  if (sortedLabs.length) {
+    chartWrap.style.display = '';
+    renderBars('gma-bars', sortedLabs.map(([lab,total]) => ({ label: GMA_LABELS[lab], price: total })));
+  } else { chartWrap.style.display = 'none'; }
+
+  const labHeaders = activeLabs.map(lab =>
+    `<th style="color:#aef;border-left:1px solid #2a3f6a">${GMA_LABELS[lab]}</th><th style="color:#8af;font-size:0.72rem">LT</th>`
+  ).join('');
+
+  let html = `<table><thead><tr>
+    <th>Country</th><th>Authority</th><th>Mandatory</th><th>Recommended</th>
+    ${labHeaders}<th>Notes</th>
+  </tr></thead><tbody>`;
+
+  // Track totals for Total row
+  const colTotals = {};
+  activeLabs.forEach(l => colTotals[l] = 0);
+
+  rows.forEach(r => {
+    const prices = activeLabs.map(lab=>r[lab]).filter(v=>v!=null);
+    const minP = prices.length ? Math.min(...prices) : null;
+    const maxP = prices.length ? Math.max(...prices) : null;
+    const mandBadge = r.mandatory==='Mandatory' ? 'bg-red' : r.mandatory==='Voluntary' ? 'bg-yellow' : 'bg-gray';
+    const labCells = activeLabs.map(lab => {
+      const v = r[lab];
+      const lt = r[lab+'_lt'] || '—';
+      const isRec = r.recommended === GMA_LABELS[lab];
+      if (v != null) colTotals[lab] = (colTotals[lab]||0) + v;
+      let cell;
+      if (v == null) cell = '<span class="p-na">N/A</span>';
+      else if (isRec) cell = `<span style="font-weight:700;color:#27ae60">$${v.toLocaleString()} ★</span>`;
+      else cell = colorPrice(v, minP, maxP);
+      return `<td style="border-left:1px solid #f0f0f0">${cell}</td><td style="color:#bbb;font-size:0.75rem">${lt}</td>`;
+    }).join('');
+    html += `<tr>
+      <td style="font-weight:600">${r.country}</td>
+      <td style="color:#666;font-size:0.8rem">${r.auth||'—'}</td>
+      <td><span class="badge ${mandBadge}">${r.mandatory||'—'}</span></td>
+      <td><span class="badge bg-blue">${r.recommended||'—'}</span></td>
+      ${labCells}
+      <td style="color:#999;font-size:0.73rem;max-width:200px">${r.note||''}</td>
+    </tr>`;
+  });
+
+  // Total row
+  const totalVals = activeLabs.map(l => colTotals[l]).filter(v=>v>0);
+  const minTotal = totalVals.length ? Math.min(...totalVals) : null;
+  html += `<tr style="background:#f0f4ff;border-top:3px solid #1a2b4a;font-weight:700">
+    <td colspan="4" style="color:#1a2b4a">💰 Total (Selected)</td>
+    ${activeLabs.map(lab => {
+      const t = colTotals[lab] || 0;
+      const cls = t > 0 && t === minTotal ? 'p-best' : '';
+      return `<td style="border-left:1px solid #d0d8f0"><span class="${cls}">${t > 0 ? '$'+t.toLocaleString() : '—'}</span></td><td></td>`;
+    }).join('')}
+    <td></td>
+  </tr>`;
+
+  html += '</tbody></table>';
+  document.getElementById('gma-table').innerHTML = rows.length ? html : '<div class="empty">No data</div>';
+}
+
+function resetGMA() {
+  document.querySelectorAll('.gma-cty-chk').forEach(c => c.checked = true);
+  document.querySelectorAll('.gma-mnd-chk').forEach(c => c.checked = true);
+  document.querySelectorAll('.gma-lab-chk').forEach(c => c.checked = true);
+  document.getElementById('gma-rec').value = 'all';
+  renderGMA();
+}
+
+// ── Cost Summary ──────────────────────────────────────────────
+function renderSummary() {
+  if (!DATA) return;
+
+  const rows = [];
+
+  // ── BQB ──
+  const bqbSelLab = document.querySelector('input[name="bqb-selected-lab"]:checked')?.value || 'Allion';
+  const bqbSelItems = [...document.querySelectorAll('.bqb-chk:checked')].map(c=>c.value);
+  const bqbData = DATA.bqb.filter(r => bqbSelItems.includes(r.key) && r.lab === bqbSelLab);
+  bqbData.forEach(r => {
+    if (r.price) rows.push({ section: 'BQB Bluetooth', item: r.item, lab: bqbSelLab, price: r.price, leadtime: r.leadtime||'—' });
+  });
+
+  // ── Safety/Energy ──
+  const swSel = document.querySelector('input[name="sw-selected-lab"]:checked')?.value || 'Wendell-UL';
+  const [swLab, swType] = swSel.split('-');
+  const swProd = document.getElementById('sw-product')?.value || '';
+  const swSelRegs = [...document.querySelectorAll('.sw-reg-chk:checked')].map(c=>c.value);
+  const swSelStds = [...document.querySelectorAll('.sw-std-chk:checked')].map(c=>c.value);
+  const swData = (DATA.safety_wendell[swProd]||[]).filter(r =>
+    r.source_lab === swLab && swSelRegs.includes(r.region) && swSelStds.includes(r.item)
+  );
+  swData.forEach(r => {
+    const price = swType === 'UL' ? (r.ul_lab||0)+(r.ul_wd||0) : (r.tuv_lab||0)+(r.tuv_wd||0);
+    if (price > 0) rows.push({ section: 'Safety/Energy', item: r.item, lab: `${swLab} (${swType})`, price, leadtime: swType==='UL'?r.ul_lt:r.tuv_lt||'—' });
+  });
+
+  // ── EMC/RF ──
+  const sudSelLab = document.querySelector('input[name="sud-selected-lab"]:checked')?.value || 'TUV Rh';
+  const sudSelCtys = [...document.querySelectorAll('.sud-cty-chk:checked')].map(c=>c.value);
+  const sudSelScps = [...document.querySelectorAll('.sud-scp-chk:checked')].map(c=>c.value);
+  const EXCL_CTYS = new Set(['Kuwait','Saudi Arabia','Malaysia','Hong Kong','Singapore','International_Tentative evaluation']);
+  const EXCL_SCPS = new Set(['Safety','ALL','Energy']);
+  const sudAllRows = (DATA.safety_sud['Camera Doorbell']||[]).filter(r =>
+    !EXCL_CTYS.has(r.country) && !EXCL_SCPS.has(r.scope) &&
+    sudSelCtys.includes(r.country) && sudSelScps.includes(r.scope) && r.lab === sudSelLab
+  );
+  // Deduplicate same country+scope+cert+standard
+  const sudSeen = new Set();
+  sudAllRows.forEach(r => {
+    const key = `${r.country}||${r.scope}||${r.cert_name}||${r.standard}`;
+    if (!sudSeen.has(key) && r.price) {
+      sudSeen.add(key);
+      rows.push({ section: 'EMC/RF', item: `${r.country} — ${r.standard||r.cert_name}`, lab: sudSelLab, price: r.price, leadtime: '—' });
+    }
+  });
+
+  // ── GMA ──
+  const gmaSelLab = document.querySelector('input[name="gma-selected-lab"]:checked')?.value || 'ul';
+  const gmaSelCtys = [...document.querySelectorAll('.gma-cty-chk:checked')].map(c=>c.value);
+  const gmaSelMand = [...document.querySelectorAll('.gma-mnd-chk:checked')].map(c=>c.value);
+  const gmaData = DATA.gma.filter(r => gmaSelCtys.includes(r.country) && gmaSelMand.includes(r.mandatory));
+  gmaData.forEach(r => {
+    const price = r[gmaSelLab];
+    const lt    = r[gmaSelLab+'_lt'] || '—';
+    if (price) rows.push({ section: 'GMA with WiFi BLE', item: r.country, lab: GMA_LABELS[gmaSelLab], price, leadtime: lt });
+  });
+
+  // ── Build Summary ──
+  if (!rows.length) {
+    document.getElementById('summary-cards').innerHTML = '';
+    document.getElementById('summary-table').innerHTML = '<div class="empty">No selections found. Please make selections in each tab first, then click Refresh Summary.</div>';
+    return;
+  }
+
+  const grandTotal = rows.reduce((s,r) => s + (r.price||0), 0);
+  const sections = [...new Set(rows.map(r=>r.section))];
+
+  document.getElementById('summary-cards').innerHTML = `
+    <div class="card info"><div class="lbl">Total Items</div><div class="val">${rows.length}</div></div>
+    <div class="card info"><div class="lbl">Sections</div><div class="val">${sections.length}</div></div>
+    <div class="card best"><div class="lbl">💰 Grand Total</div><div class="val">$${grandTotal.toLocaleString()}</div></div>
+  `;
+
+  let html = `<table><thead><tr>
+    <th>Section</th><th>Item / Standard</th><th>Lab</th><th style="text-align:right">Price (USD)</th><th>Lead Time</th>
+  </tr></thead><tbody>`;
+
+  let lastSection = '';
+  let sectionTotal = 0;
+  const sectionRows = {};
+  rows.forEach(r => {
+    if (!sectionRows[r.section]) sectionRows[r.section] = [];
+    sectionRows[r.section].push(r);
+  });
+
+  sections.forEach(sec => {
+    const secRows = sectionRows[sec] || [];
+    const secTotal = secRows.reduce((s,r) => s+(r.price||0), 0);
+    html += `<tr style="background:#f0f4ff;border-top:3px solid #1a2b4a">
+      <td colspan="5" style="font-weight:700;color:#1a2b4a">${sec}</td>
+    </tr>`;
+    secRows.forEach(r => {
+      html += `<tr>
+        <td></td>
+        <td style="font-size:0.82rem;max-width:320px">${r.item}</td>
+        <td><span class="badge bg-blue">${r.lab}</span></td>
+        <td style="text-align:right;font-weight:600">$${(r.price||0).toLocaleString()}</td>
+        <td style="color:#888;font-size:0.8rem">${r.leadtime}</td>
+      </tr>`;
+    });
+    html += `<tr style="background:#e8f0fe;font-weight:700">
+      <td></td><td colspan="2" style="color:#1a2b4a">Subtotal</td>
+      <td style="text-align:right;color:#1a2b4a">$${secTotal.toLocaleString()}</td><td></td>
+    </tr>`;
+  });
+
+  html += `<tr style="background:#1a2b4a;color:white;font-weight:700;font-size:1.05rem">
+    <td colspan="3">💰 Grand Total</td>
+    <td style="text-align:right;color:#7fc">$${grandTotal.toLocaleString()}</td>
+    <td></td>
+  </tr>`;
+
+  html += '</tbody></table>';
+  document.getElementById('summary-table').innerHTML = html;
+}
+
+// ── Auto-reload every 10s if data.json changes ────────────────
+let lastModified = '';
+async function checkReload() {
+  try {
+    const r = await fetch('data.json', { method: 'HEAD' });
+    const lm = r.headers.get('last-modified') || '';
+    if (lastModified && lm !== lastModified) {
+      console.log('data.json changed — reloading...');
+      await loadData();
+    }
+    lastModified = lm;
+  } catch(e) {}
+}
+// disabled
+
+// ── Start ─────────────────────────────────────────────────────
+loadData();
+</script>
+</body>
+</html>
