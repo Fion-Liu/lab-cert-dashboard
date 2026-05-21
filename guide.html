@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab Certification Fee Dashboard — 使用手冊</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f7fa; color: #333; line-height: 1.7; }
+.page { max-width: 900px; margin: 40px auto 60px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; }
+.hero { background: linear-gradient(135deg, #1a2b4a 0%, #2c5282 100%); color: white; padding: 40px 48px; }
+.hero h1 { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; }
+.hero p  { font-size: 0.95rem; opacity: 0.75; }
+.hero .url-badge { display: inline-block; margin-top: 16px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 8px; padding: 8px 16px; font-size: 0.9rem; font-family: monospace; }
+.hero .url-badge a { color: #7fc; text-decoration: none; }
+.toc { background: #f0f4ff; border-left: 4px solid #1a2b4a; padding: 20px 28px; margin: 32px 48px; border-radius: 0 8px 8px 0; }
+.toc h3 { font-size: 0.85rem; font-weight: 700; color: #1a2b4a; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+.toc ol { padding-left: 20px; }
+.toc li { font-size: 0.88rem; margin-bottom: 4px; }
+.toc a { color: #2c5282; text-decoration: none; }
+.toc a:hover { text-decoration: underline; }
+.body { padding: 0 48px 48px; }
+h2 { font-size: 1.15rem; font-weight: 700; color: #1a2b4a; margin: 36px 0 14px; padding: 10px 16px; background: #f0f4ff; border-left: 4px solid #1a2b4a; border-radius: 0 6px 6px 0; }
+h3 { font-size: 0.95rem; font-weight: 700; color: #2c5282; margin: 20px 0 8px; }
+p  { font-size: 0.9rem; color: #444; margin-bottom: 10px; }
+ul, ol { padding-left: 22px; margin-bottom: 12px; }
+li { font-size: 0.88rem; color: #444; margin-bottom: 5px; }
+.step-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 16px 0; }
+.step-card { background: #f8faff; border: 1.5px solid #c5d3f0; border-radius: 8px; padding: 14px 16px; }
+.step-card .num { width: 28px; height: 28px; background: #1a2b4a; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; margin-bottom: 8px; }
+.step-card strong { display: block; font-size: 0.88rem; margin-bottom: 4px; color: #1a2b4a; }
+.step-card p { font-size: 0.82rem; color: #666; margin: 0; }
+.tab-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 16px 0; }
+.tab-card { background: #f8faff; border: 1.5px solid #e0e8f5; border-radius: 8px; padding: 14px 16px; }
+.tab-card .tab-name { font-weight: 700; font-size: 0.9rem; color: #1a2b4a; margin-bottom: 6px; }
+.tab-card p { font-size: 0.82rem; color: #666; margin: 0; line-height: 1.5; }
+.color-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.color-sample { font-weight: 700; font-size: 1rem; min-width: 100px; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 700; }
+.bg-red    { background: #f8d7da; color: #721c24; }
+.bg-yellow { background: #fff3cd; color: #856404; }
+.bg-gray   { background: #e2e3e5; color: #383d41; }
+.bg-blue   { background: #d1ecf1; color: #0c5460; }
+.flow { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 14px 0; }
+.flow-item { background: #1a2b4a; color: white; padding: 7px 14px; border-radius: 6px; font-size: 0.82rem; font-weight: 600; }
+.flow-arrow { color: #aaa; font-size: 1.2rem; }
+.code { background: #1e2a3a; color: #7fc; padding: 12px 16px; border-radius: 6px; font-family: monospace; font-size: 0.85rem; margin: 10px 0; overflow-x: auto; }
+.tip { background: #fffbe6; border-left: 4px solid #f0ad4e; border-radius: 4px; padding: 10px 14px; font-size: 0.84rem; color: #7a5c00; margin: 14px 0; }
+.warn { background: #fff3cd; border-left: 4px solid #e74c3c; border-radius: 4px; padding: 10px 14px; font-size: 0.84rem; color: #721c24; margin: 14px 0; }
+table { width: 100%; border-collapse: collapse; margin: 14px 0; font-size: 0.85rem; }
+th { background: #1a2b4a; color: white; padding: 9px 14px; text-align: left; }
+td { padding: 8px 14px; border-bottom: 1px solid #f0f0f0; }
+tr:hover td { background: #f7f9fc; }
+footer { background: #f8faff; padding: 20px 48px; font-size: 0.78rem; color: #aaa; border-top: 1px solid #eee; text-align: center; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="hero">
+  <h1>🔬 Lab Certification Fee Dashboard</h1>
+  <p>實驗室認證費用比較工具 — 完整使用手冊 v1.0</p>
+  <div class="url-badge">
+    Dashboard 連結：<a href="https://fion-liu.github.io/lab-cert-dashboard/" target="_blank">https://fion-liu.github.io/lab-cert-dashboard/</a>
+  </div>
+</div>
+
+<div class="toc">
+  <h3>目錄</h3>
+  <ol>
+    <li><a href="#access">如何開啟 Dashboard</a></li>
+    <li><a href="#tabs">五個分頁說明</a></li>
+    <li><a href="#colors">顏色與符號說明</a></li>
+    <li><a href="#filters">篩選功能說明</a></li>
+    <li><a href="#update">資料更新流程</a></li>
+    <li><a href="#excel">Excel 檔案命名規則</a></li>
+    <li><a href="#admin">管理員操作說明</a></li>
+    <li><a href="#faq">常見問題</a></li>
+  </ol>
+</div>
+
+<div class="body">
+
+<!-- 1. 開啟方式 -->
+<h2 id="access">1. 如何開啟 Dashboard</h2>
+<p>直接在瀏覽器輸入以下網址，不需要安裝任何軟體：</p>
+<div class="code">https://fion-liu.github.io/lab-cert-dashboard/</div>
+<p>支援 Chrome、Firefox、Safari、Edge，Mac 和 Windows 都可以使用。</p>
+<div class="tip">💡 建議將此網址加入書籤，方便日後快速開啟。</div>
+
+<!-- 2. 分頁說明 -->
+<h2 id="tabs">2. 五個分頁說明</h2>
+<div class="tab-grid">
+  <div class="tab-card">
+    <div class="tab-name">📡 BQB Bluetooth</div>
+    <p>比較 <strong>Allion、Dekra、TUV RH</strong> 三家實驗室的 Bluetooth 認證費用。<br>
+    可複選項目：RF-PHY、Profile、Profile Check、BQC Review、RN/DID、Handling Fee。<br>
+    表格最下方顯示各實驗室費用加總。</p>
+  </div>
+  <div class="tab-card">
+    <div class="tab-name">🛡️ Safety/Energy</div>
+    <p>比較 <strong>Wendell、Perfectlink、USS</strong> 三家的安規費用。<br>
+    可複選 Region 和 Standard。<br>
+    欄位：UL Cert/Rep. | TUV SUD Cert/Rep. | WD/USS for Test | UL Total | TUV Total</p>
+  </div>
+  <div class="tab-card">
+    <div class="tab-name">📡 EMC/RF</div>
+    <p>比較 <strong>TUV Rh vs TUV SUD</strong> 的 EMC/RF 費用（Camera Doorbell）。<br>
+    可複選 Country/Region 和 Scope（EMC、RF、Telecom）。<br>
+    表格最下方顯示 Total 及節省費用。</p>
+  </div>
+  <div class="tab-card">
+    <div class="tab-name">🌍 GMA with WiFi BLE</div>
+    <p>23 個國家的 WiFi/BLE 認證費用比較。<br>
+    比較 <strong>UL、BV、CSA、Sporton、TUV、KIWA</strong> 六家實驗室。<br>
+    可複選 Country、Mandatory Status、Lab，並可篩選 Recommended Lab。</p>
+  </div>
+  <div class="tab-card" style="grid-column: span 2">
+    <div class="tab-name">💰 Cost Summary</div>
+    <p>彙整所有分頁中已選定的費用，提供完整費用總表。<br>
+    在各分頁選定條件後，切換到此分頁點 <strong>Refresh Summary</strong> 查看各項目小計及 Grand Total。<br>
+    綠色 ✓ = 最低總費用方案。</p>
+  </div>
+</div>
+
+<!-- 3. 顏色說明 -->
+<h2 id="colors">3. 顏色與符號說明</h2>
+<div class="color-row"><span class="color-sample" style="color:#27ae60">$1,200 ✓</span><span>= 該行最低價格</span></div>
+<div class="color-row"><span class="color-sample" style="color:#e74c3c">$6,000</span><span>= 該行最高價格</span></div>
+<div class="color-row"><span class="color-sample" style="color:#27ae60">$1,930 ★</span><span>= 該國家推薦實驗室（GMA）</span></div>
+<div class="color-row"><span class="badge bg-red">Mandatory</span><span style="margin-left:8px">= 強制認證</span></div>
+<div class="color-row"><span class="badge bg-yellow">Voluntary</span><span style="margin-left:8px">= 自願性認證</span></div>
+<div class="color-row"><span class="badge bg-gray">Not Mandatory</span><span style="margin-left:8px">= 非強制</span></div>
+<div class="color-row"><span style="background:#f0f4ff;padding:4px 10px;border-radius:6px;font-size:0.85rem;font-weight:700;color:#1a2b4a">💰 Total</span><span style="margin-left:8px">= 選定項目的費用加總列</span></div>
+
+<!-- 4. 篩選功能 -->
+<h2 id="filters">4. 篩選功能說明</h2>
+<h3>複選 Checkbox</h3>
+<p>BQB、Safety/Energy、EMC/RF、GMA 分頁都支援複選篩選：</p>
+<ul>
+  <li>預設全選，可以任意勾選/取消</li>
+  <li><strong>全部取消</strong> → 顯示空白（No data）</li>
+  <li>選定後表格即時更新，不需要按確認</li>
+</ul>
+<h3>Safety/Energy 特別說明</h3>
+<ul>
+  <li>先選 <strong>Region</strong>（CB / EU / US/CA），Standard 清單會自動更新為該 Region 的法規</li>
+  <li>再選 <strong>Standard</strong> 篩選特定法規</li>
+</ul>
+<h3>GMA 特別說明</h3>
+<ul>
+  <li><strong>Recommended Lab</strong> 下拉選單：篩選特定推薦實驗室的國家</li>
+  <li>Lab 複選：只顯示選定實驗室的費用欄位</li>
+</ul>
+
+<!-- 5. 資料更新 -->
+<h2 id="update">5. 資料更新流程</h2>
+<p>Dashboard 資料來自 SharePoint，<strong>全程自動更新，不需要手動操作</strong>：</p>
+<div class="flow">
+  <div class="flow-item">📊 新 Excel 上傳到 SharePoint</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-item">⏱ 自動偵測（5分鐘內）</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-item">🔄 自動解析 + 重建</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-item">🚀 自動推送 GitHub Pages</div>
+  <div class="flow-arrow">→</div>
+  <div class="flow-item">✅ 重新整理頁面即可</div>
+</div>
+<div class="tip">📁 <strong>Archive 資料夾內的 Excel 不會被讀取。</strong><br>
+如需排除某份報價單，請將該 Excel 移到 SharePoint 的 <code>Archive/</code> 子資料夾。</div>
+
+<!-- 6. Excel 命名規則 -->
+<h2 id="excel">6. Excel 檔案命名規則</h2>
+<p>系統根據檔名自動判斷類型，請依照以下規則命名：</p>
+<table>
+  <tr><th>檔名格式</th><th>對應分頁</th><th>來源實驗室</th></tr>
+  <tr><td>BQB*Allion*.xlsx</td><td>BQB Bluetooth</td><td>Allion</td></tr>
+  <tr><td>BQB*Dekra*.xlsx</td><td>BQB Bluetooth</td><td>Dekra</td></tr>
+  <tr><td>BQB*TUV*.xlsx</td><td>BQB Bluetooth</td><td>TUV RH</td></tr>
+  <tr><td>EMC+RF*TUV Rh*.xlsx</td><td>EMC/RF</td><td>TUV Rh</td></tr>
+  <tr><td>EMC+RF*SUD*.xlsx</td><td>EMC/RF</td><td>TUV SUD</td></tr>
+  <tr><td>Safety*Wendell*.xlsx</td><td>Safety/Energy</td><td>Wendell</td></tr>
+  <tr><td>Safety*Perfectlink*.xlsx</td><td>Safety/Energy</td><td>Perfectlink</td></tr>
+  <tr><td>Safety*USS*.xlsx</td><td>Safety/Energy</td><td>USS</td></tr>
+  <tr><td>GMA*.xlsx 或 *countries*.xlsx</td><td>GMA with WiFi BLE</td><td>—</td></tr>
+</table>
+<div class="warn">⚠️ 檔名不符合規則的 Excel 會被系統跳過（顯示 [SKIP]）。</div>
+
+<!-- 7. 管理員操作 -->
+<h2 id="admin">7. 管理員操作說明（Fiona 專用）</h2>
+<h3>SharePoint 資料夾</h3>
+<div class="code">RBKS Compliance → Shared Documents → Compliance Certificate Fee from 3rd party lab</div>
+<h3>本機路徑</h3>
+<div class="code">/Users/licfiona/Project Certification Estimate Fee/</div>
+<h3>手動強制更新</h3>
+<p>如需立即更新（不等 5 分鐘），在 Terminal 執行：</p>
+<div class="code">bash "/Users/licfiona/Project Certification Estimate Fee/auto_update.sh"</div>
+<h3>查看更新日誌</h3>
+<div class="code">tail -20 "/Users/licfiona/Project Certification Estimate Fee/auto_update.log"</div>
+<h3>本機預覽（辦公室內網）</h3>
+<div class="code">http://192.168.199.67:8765</div>
+<h3>GitHub Token 更新</h3>
+<p>Token 過期時，到 <a href="https://github.com/settings/tokens" target="_blank">github.com/settings/tokens</a> 建立新 token，更新 config.json：</p>
+<div class="code">/Users/licfiona/Project Certification Estimate Fee/config.json</div>
+
+<!-- 8. FAQ -->
+<h2 id="faq">8. 常見問題</h2>
+<h3>Q: 頁面顯示舊資料，如何更新？</h3>
+<p>按 <strong>Cmd+Shift+R</strong>（Mac）或 <strong>Ctrl+Shift+R</strong>（Windows）強制重新整理。</p>
+<h3>Q: 某個 Excel 的資料沒有出現？</h3>
+<p>確認檔名符合命名規則，且不在 Archive 資料夾內。查看 auto_update.log 確認是否有 [SKIP] 訊息。</p>
+<h3>Q: 費用顯示 N/A 是什麼意思？</h3>
+<p>該實驗室沒有提供該項目的報價，或該國家不適用。</p>
+<h3>Q: Cost Summary 沒有資料？</h3>
+<p>請先在各分頁選定條件，再切換到 Cost Summary 分頁點 Refresh Summary。</p>
+<h3>Q: 如何聯絡管理員？</h3>
+<p>Fiona Li &nbsp;|&nbsp; licfiona@amazon.com</p>
+
+</div><!-- end body -->
+
+<footer>
+  Lab Certification Fee Dashboard &nbsp;|&nbsp; 使用手冊 v1.0 &nbsp;|&nbsp; For internal use only &nbsp;|&nbsp;
+  <a href="https://fion-liu.github.io/lab-cert-dashboard/" style="color:#2c5282">開啟 Dashboard</a>
+</footer>
+
+</div><!-- end page -->
+</body>
+</html>
